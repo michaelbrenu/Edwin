@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IWMRO — Accra Waste Management System</title>
+  <link rel="stylesheet" href="/static/tailwind.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav style="background:#0a0a0a;" class="text-white shadow-lg">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm" style="background:#ffffff15;border:1px solid #ffffff25;">W</div>
+      <div>
+        <div class="font-bold text-base leading-tight tracking-wide">IWMRO</div>
+        <div class="text-xs leading-tight" style="color:#888;">Integrated Waste Management &amp; Recycling Optimizer</div>
+      </div>
+    </div>
+    <span class="text-sm hidden md:block" style="color:#666;">Accra Metropolitan Assembly</span>
+  </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────────────────────── -->
+<div style="background:#0a0a0a;" class="text-white py-16">
+  <div class="max-w-4xl mx-auto px-6 text-center">
+    <div class="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-5 uppercase tracking-widest" style="background:#ffffff12;color:#aaa;border:1px solid #ffffff1a;">
+      AI-Powered &nbsp;·&nbsp; Accra, Ghana
+    </div>
+    <h1 class="text-4xl font-bold mb-4 leading-snug">
+      Smart Waste Collection<br>for a Cleaner Accra
+    </h1>
+    <p class="text-lg max-w-2xl mx-auto leading-relaxed" style="color:#888;">
+      Classify waste from field images, detect collection hotspots across 9 zones,
+      optimise truck routes with Haversine geometry, and generate community reports —
+      in a single pipeline run.
+    </p>
+  </div>
+</div>
+
+<!-- ── Pipeline Workflow ───────────────────────────────────────────────────── -->
+<div class="bg-white border-b border-gray-100 py-10">
+  <div class="max-w-5xl mx-auto px-6">
+    <p class="text-center text-gray-400 text-xs font-semibold uppercase tracking-widest mb-8">Pipeline Workflow</p>
+    <div class="flex items-start">
+
+      <!-- Step 1 — Red -->
+      <div class="flex flex-col items-center text-center w-28 flex-shrink-0">
+        <div class="step-icon" style="background:#dc2626;box-shadow:0 2px 8px rgba(220,38,38,.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="text-green-900 font-semibold text-sm">Capture</div>
+        <div class="text-gray-400 text-xs mt-1">Field images from waste bins</div>
+      </div>
+
+      <div class="step-connector mt-1"></div>
+
+      <!-- Step 2 — Orange -->
+      <div class="flex flex-col items-center text-center w-28 flex-shrink-0">
+        <div class="step-icon" style="background:#ea580c;box-shadow:0 2px 8px rgba(234,88,12,.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="text-green-900 font-semibold text-sm">Anonymise</div>
+        <div class="text-gray-400 text-xs mt-1">Blur faces &amp; plates</div>
+      </div>
+
+      <div class="step-connector mt-1"></div>
+
+      <!-- Step 3 — Blue -->
+      <div class="flex flex-col items-center text-center w-28 flex-shrink-0">
+        <div class="step-icon" style="background:#1d4ed8;box-shadow:0 2px 8px rgba(29,78,216,.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <div class="text-green-900 font-semibold text-sm">Classify</div>
+        <div class="text-gray-400 text-xs mt-1">Waste type &amp; fill level</div>
+      </div>
+
+      <div class="step-connector mt-1"></div>
+
+      <!-- Step 4 — Green -->
+      <div class="flex flex-col items-center text-center w-28 flex-shrink-0">
+        <div class="step-icon" style="background:#16a34a;box-shadow:0 2px 8px rgba(22,163,74,.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        </div>
+        <div class="text-green-900 font-semibold text-sm">Route</div>
+        <div class="text-gray-400 text-xs mt-1">Hotspot detection &amp; routing</div>
+      </div>
+
+      <div class="step-connector mt-1"></div>
+
+      <!-- Step 5 — Yellow -->
+      <div class="flex flex-col items-center text-center w-28 flex-shrink-0">
+        <div class="step-icon" style="background:#ca8a04;box-shadow:0 2px 8px rgba(202,138,4,.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="text-green-900 font-semibold text-sm">Report</div>
+        <div class="text-gray-400 text-xs mt-1">Dashboard &amp; campaign report</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Action Card ─────────────────────────────────────────────────────────── -->
+<div class="max-w-xl mx-auto px-6 py-12">
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+
+    <!-- Tab header -->
+    <div class="flex border-b border-gray-100">
+      <button class="tab-btn active" id="tab-demo" onclick="switchTab('demo')">Run Demo</button>
+      <button class="tab-btn"        id="tab-upload" onclick="switchTab('upload')">Upload Images</button>
+    </div>
+
+    <!-- ── DEMO panel ── -->
+    <div id="panel-demo" class="p-8">
+      <p class="text-gray-600 text-sm mb-5 leading-relaxed">
+        Run the full pipeline on a synthetic dataset of <strong>50 waste bins</strong> across
+        9 Accra zones — Makola, East Legon, Osu, Kaneshie, Tema and more.
+        No images required.
+      </p>
+
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5 text-sm text-amber-800">
+        <div class="font-semibold mb-1">Mock dataset</div>
+        50 bins &nbsp;·&nbsp; 9 zones &nbsp;·&nbsp; Plastic / Organic / Metal &nbsp;·&nbsp; Haversine routing
+      </div>
+
+      {% if not clip_available %}
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5 text-sm text-blue-800">
+        <div class="font-semibold mb-1">CLIP classifier not installed</div>
+        Demo uses pre-assigned mock labels. To enable AI classification run:<br>
+        <code class="bg-blue-100 px-1.5 py-0.5 rounded text-xs mt-1 inline-block">pip install torch torchvision transformers</code>
+      </div>
+      {% endif %}
+
+      <!-- Session mode indicator -->
+      {% if openai_available %}
+      <div class="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 text-sm" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:#dcfce7;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="font-semibold text-green-800">AI Report Mode</div>
+          <div class="text-xs text-green-600 mt-0.5">GPT-4o mini will generate your Community Campaign Report on the results page.</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 text-sm" style="background:#f9fafb;border:1px solid #e5e7eb;">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f3f4f6;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div>
+          <div class="font-semibold text-gray-600">Standard Mode</div>
+          <div class="text-xs text-gray-400 mt-0.5">Static analysis &amp; community tips. <a href="#api-config" onclick="toggleApiConfig();return false;" class="text-green-700 hover:underline">Add an API key</a> to enable AI reports.</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <form method="post" action="/run" id="form-demo">
+        <input type="hidden" name="demo" value="1">
+        <input type="hidden" name="use_clip" value="0">
+        <button type="submit"
+          class="w-full bg-green-700 hover:bg-green-800 active:bg-green-900 text-white font-semibold py-3 rounded-xl transition-colors text-sm tracking-wide">
+          Run Full Pipeline
+        </button>
+      </form>
+    </div>
+
+    <!-- ── UPLOAD panel ── -->
+    <div id="panel-upload" class="p-8 hidden">
+      <p class="text-gray-600 text-sm mb-5 leading-relaxed">
+        Upload JPEG or PNG images captured from field bins. The system will anonymise,
+        classify, and generate optimised collection routes for your data.
+      </p>
+
+      <form method="post" action="/run" enctype="multipart/form-data" id="form-upload">
+        <input type="hidden" name="demo" value="0">
+
+        <!-- Drop zone -->
+        <label class="drop-zone block mb-4" id="drop-zone" for="file-input">
+          <input type="file" name="images" id="file-input" multiple accept="image/*"
+            class="hidden" onchange="updateFileLabel(this)">
+          <svg class="mx-auto mb-3 text-gray-300" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          <p class="text-sm text-gray-500 font-medium" id="file-label">Click to select images or drag &amp; drop</p>
+          <p class="text-xs text-gray-400 mt-1">JPEG, PNG supported</p>
+        </label>
+
+        {% if clip_available %}
+        <label class="flex items-center gap-3 mb-5 cursor-pointer">
+          <input type="checkbox" name="use_clip" value="1" class="w-4 h-4 accent-green-700">
+          <span class="text-sm text-gray-700">Use CLIP AI classifier <span class="text-gray-400">(slower, higher accuracy)</span></span>
+        </label>
+        {% endif %}
+
+        <!-- Session mode indicator -->
+        {% if openai_available %}
+        <div class="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 text-sm" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:#dcfce7;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="font-semibold text-green-800">AI Report Mode</div>
+            <div class="text-xs text-green-600 mt-0.5">GPT-4o mini will generate your Community Campaign Report on the results page.</div>
+          </div>
+        </div>
+        {% else %}
+        <div class="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 text-sm" style="background:#f9fafb;border:1px solid #e5e7eb;">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f3f4f6;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div>
+            <div class="font-semibold text-gray-600">Standard Mode</div>
+            <div class="text-xs text-gray-400 mt-0.5">Static analysis &amp; community tips. <a href="#api-config" onclick="toggleApiConfig();return false;" class="text-green-700 hover:underline">Add an API key</a> to enable AI reports.</div>
+          </div>
+        </div>
+        {% endif %}
+
+        <button type="submit"
+          class="w-full bg-green-700 hover:bg-green-800 active:bg-green-900 text-white font-semibold py-3 rounded-xl transition-colors text-sm tracking-wide">
+          Upload &amp; Run Pipeline
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if has_results %}
+  <div class="mt-5 text-center">
+    <a href="/results" class="text-green-700 text-sm font-medium hover:underline">
+      View previous results &rarr;
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── API Key Configuration ───────────────────────────────────────────────── -->
+<div id="api-config" class="max-w-xl mx-auto px-6 pb-10">
+  <div class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">
+
+    <!-- Header -->
+    <button onclick="toggleApiConfig()"
+      class="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+      id="api-config-toggle">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style="background:{% if openai_available %}#dcfce7{% else %}#f3f4f6{% endif %};">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="{% if openai_available %}#16a34a{% else %}#9ca3af{% endif %}"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="font-semibold text-sm text-gray-800">AI Report Configuration</div>
+          <div class="text-xs mt-0.5" style="color:{% if openai_available %}#16a34a{% else %}#9ca3af{% endif %};">
+            {% if openai_available %}OpenAI API key configured &mdash; AI Insights enabled{% else %}No API key &mdash; AI Insights disabled{% endif %}
+          </div>
+        </div>
+      </div>
+      <svg id="api-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af"
+        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+        style="transition:transform .2s;flex-shrink:0;">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+
+    <!-- Collapsible body -->
+    <div id="api-config-body" style="display:none; border-top:1px solid #f3f4f6;">
+      <div class="px-6 py-5">
+
+        {% if request.query_params.get('key_saved') %}
+        <div class="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-2.5 mb-4">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          API key saved successfully.
+        </div>
+        {% endif %}
+
+        <p class="text-xs text-gray-500 mb-4 leading-relaxed">
+          Your key is stored in a local <code class="bg-gray-100 px-1 rounded">.env</code> file
+          and never sent anywhere other than OpenAI. It persists across server restarts.
+        </p>
+
+        <form method="post" action="/set-api-key" class="flex gap-2">
+          <input type="password" name="key" placeholder="sk-…"
+            value="{% if openai_available %}••••••••••••••••{% endif %}"
+            onfocus="if(this.value.startsWith('•'))this.value=''"
+            class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-green-400 focus:ring-1 focus:ring-green-200 font-mono"
+            required autocomplete="off">
+          <button type="submit"
+            class="text-sm font-semibold px-4 py-2 rounded-lg text-white transition-colors"
+            style="background:#1b5e20;">
+            Save
+          </button>
+        </form>
+
+        <p class="text-xs text-gray-400 mt-3">
+          Get a key at
+          <a href="https://platform.openai.com/api-keys" target="_blank"
+            class="text-green-700 hover:underline">platform.openai.com/api-keys</a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────────── -->
+<footer class="bg-gray-800 text-gray-400 text-center py-6 text-sm mt-4">
+  <p class="font-medium text-gray-300">IWMRO v1.0 &nbsp;·&nbsp; Accra Metropolitan Assembly</p>
+  <p class="text-xs mt-1 text-gray-500">Master's Capstone Project &nbsp;·&nbsp; FastAPI · CLIP · OpenCV · Leaflet · Chart.js</p>
+</footer>
+
+<!-- ── Pipeline Walkthrough Overlay ───────────────────────────────────────── -->
+<div id="ol-backdrop" class="overlay-backdrop" style="display:none"></div>
+<div id="ol-card" class="overlay-card" style="display:none">
+
+  <!-- Header -->
+  <div class="ol-header">
+    <div class="ol-header-row">
+      <div class="ol-title-group">
+        <div id="ol-spinner" class="ol-main-spinner"></div>
+        <div id="ol-check" class="ol-main-check" style="display:none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="ol-title">Analyzing Accra Waste Data</div>
+          <div id="ol-subtitle" class="ol-subtitle">Initialising pipeline&hellip;</div>
+        </div>
+      </div>
+      <div id="ol-elapsed" class="ol-elapsed"></div>
+    </div>
+    <div class="ol-progress-track">
+      <div id="ol-progress-fill" class="ol-progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Journey steps -->
+  <div class="ol-steps" id="ol-steps">
+
+    <!-- Step 1: Privacy -->
+    <div class="ol-step" id="ol-step-1" style="--step-color:#dc2626;--step-light:#fef2f2;">
+      <div class="ol-step-icon" id="ol-icon-1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="ol-step-body">
+        <div class="ol-step-header">
+          <div><span class="ol-step-label">Step 1 &nbsp;·&nbsp; </span><span class="ol-step-name">Protect Privacy</span></div>
+          <span class="ol-badge waiting" id="ol-badge-1">Waiting</span>
+        </div>
+        <div class="ol-step-desc" id="ol-desc-1">Detect and blur any faces or licence plates before analysis</div>
+        <div class="ol-step-result" id="ol-result-1" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="ol-connector" id="ol-conn-1">
+      <div class="ol-conn-line"></div>
+      <div class="ol-conn-chip">anonymised images</div>
+      <div class="ol-conn-line"></div>
+    </div>
+
+    <!-- Step 2: Classify -->
+    <div class="ol-step" id="ol-step-2" style="--step-color:#ea580c;--step-light:#fff7ed;">
+      <div class="ol-step-icon" id="ol-icon-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </div>
+      <div class="ol-step-body">
+        <div class="ol-step-header">
+          <div><span class="ol-step-label">Step 2 &nbsp;·&nbsp; </span><span class="ol-step-name">Classify Bins &amp; Score Fill Levels</span></div>
+          <span class="ol-badge waiting" id="ol-badge-2">Waiting</span>
+        </div>
+        <div class="ol-step-desc" id="ol-desc-2">CLIP zero-shot AI assigns waste type (Plastic / Organic / Metal / Electronic) and records fill level per bin</div>
+        <div class="ol-step-result" id="ol-result-2" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="ol-connector" id="ol-conn-2">
+      <div class="ol-conn-line"></div>
+      <div class="ol-conn-chip">waste labels · fill levels · priority flags</div>
+      <div class="ol-conn-line"></div>
+    </div>
+
+    <!-- Step 3: Route -->
+    <div class="ol-step" id="ol-step-3" style="--step-color:#1d4ed8;--step-light:#eff6ff;">
+      <div class="ol-step-icon" id="ol-icon-3">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      </div>
+      <div class="ol-step-body">
+        <div class="ol-step-header">
+          <div><span class="ol-step-label">Step 3 &nbsp;·&nbsp; </span><span class="ol-step-name">Detect Hotspots &amp; Route Trucks</span></div>
+          <span class="ol-badge waiting" id="ol-badge-3">Waiting</span>
+        </div>
+        <div class="ol-step-desc" id="ol-desc-3">Flag high-priority zones, score collection urgency, then assign bins to trucks using Haversine TSP optimisation</div>
+        <div class="ol-step-result" id="ol-result-3" style="display:none"></div>
+        <div id="ol-hotspot-3" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="ol-connector" id="ol-conn-3">
+      <div class="ol-conn-line"></div>
+      <div class="ol-conn-chip">hotspot zones · truck assignments · route km</div>
+      <div class="ol-conn-line"></div>
+    </div>
+
+    <!-- Step 4: Export -->
+    <div class="ol-step" id="ol-step-4" style="--step-color:#16a34a;--step-light:#f0fdf4;">
+      <div class="ol-step-icon" id="ol-icon-4">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <div class="ol-step-body">
+        <div class="ol-step-header">
+          <div><span class="ol-step-label">Step 4 &nbsp;·&nbsp; </span><span class="ol-step-name">Build Dashboard Exports</span></div>
+          <span class="ol-badge waiting" id="ol-badge-4">Waiting</span>
+        </div>
+        <div class="ol-step-desc" id="ol-desc-4">Write powerbi_bins.csv, hotspots.csv, and pipeline_manifest.json — powering the map, charts, and route table on the results dashboard</div>
+        <div class="ol-step-result" id="ol-result-4" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="ol-connector" id="ol-conn-4">
+      <div class="ol-conn-line"></div>
+      <div class="ol-conn-chip">bins CSV · hotspots CSV · manifest JSON</div>
+      <div class="ol-conn-line"></div>
+    </div>
+
+    <!-- Step 5: Report -->
+    <div class="ol-step" id="ol-step-5" style="--step-color:#ca8a04;--step-light:#fefce8;">
+      <div class="ol-step-icon" id="ol-icon-5">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div class="ol-step-body">
+        <div class="ol-step-header">
+          <div><span class="ol-step-label">Step 5 &nbsp;·&nbsp; </span><span class="ol-step-name">Generate Community Campaign Report</span></div>
+          <span class="ol-badge waiting" id="ol-badge-5">Waiting</span>
+        </div>
+        <div class="ol-step-desc" id="ol-desc-5">Identify dominant waste type, write zone-specific community guidance, and compile the AMA campaign report</div>
+        <div class="ol-step-result" id="ol-result-5" style="display:none"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Done banner -->
+  <div class="ol-done-banner" id="ol-done-banner">
+    <div class="ol-done-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="ol-done-text">Analysis complete in <strong id="ol-time">—</strong>s</div>
+    <div class="ol-done-sub">Taking you to your dashboard&hellip;</div>
+  </div>
+
+</div><!-- end overlay card -->
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   IWMRO — Pipeline walkthrough overlay
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── API config toggle ── */
+function toggleApiConfig() {
+  const body    = document.getElementById('api-config-body');
+  const chevron = document.getElementById('api-chevron');
+  const open    = body.style.display === 'none';
+  body.style.display    = open ? 'block' : 'none';
+  chevron.style.transform = open ? 'rotate(180deg)' : '';
+}
+{% if request.query_params.get('key_saved') %}
+// Auto-open on redirect after save
+document.addEventListener('DOMContentLoaded', () => toggleApiConfig());
+{% endif %}
+
+/* ── Tab switching ── */
+function switchTab(name) {
+  ['demo','upload'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('panel-' + t).classList.toggle('hidden', t !== name);
+  });
+}
+
+/* ── File label update ── */
+function updateFileLabel(input) {
+  const label = document.getElementById('file-label');
+  label.textContent = input.files.length === 1
+    ? input.files[0].name
+    : input.files.length + ' images selected';
+}
+
+/* ── Drag-and-drop ── */
+const dz = document.getElementById('drop-zone');
+if (dz) {
+  ['dragenter','dragover'].forEach(e =>
+    dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(e =>
+    dz.addEventListener(e, () => dz.classList.remove('dragover')));
+  dz.addEventListener('drop', ev => {
+    ev.preventDefault();
+    document.getElementById('file-input').files = ev.dataTransfer.files;
+    updateFileLabel(document.getElementById('file-input'));
+  });
+}
+
+/* ── Show / hide overlay ── */
+function showOverlay() {
+  document.getElementById('ol-backdrop').style.display = 'block';
+  document.getElementById('ol-card').style.display     = 'block';
+}
+
+/* ── Step icon SVGs ── */
+const STEP_ICONS = {
+  1: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  2: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`,
+  3: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  4: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  5: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+};
+const CHECK_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+/* ── Set step state ── */
+function setStep(n, state, desc, result, hotspots) {
+  const row    = document.getElementById('ol-step-' + n);
+  if (!row) return;   // step not rendered in UI (e.g. optional step 6 — Sheets Sync)
+  const badge  = document.getElementById('ol-badge-' + n);
+  const descEl = document.getElementById('ol-desc-' + n);
+  const resEl  = document.getElementById('ol-result-' + n);
+  const iconEl = document.getElementById('ol-icon-' + n);
+
+  row.classList.remove('is-running','is-done','is-skip','is-error');
+  row.classList.add('is-' + state);
+
+  const badgeMap = { running: 'Running', done: 'Done', skip: 'Skipped', error: 'Error', waiting: 'Waiting' };
+  badge.textContent = badgeMap[state] || state;
+  badge.className   = 'ol-badge ' + state;
+
+  // Icon: checkmark when done, original SVG otherwise
+  if (state === 'done' && iconEl) {
+    iconEl.innerHTML = CHECK_SVG;
+    // Light up the connector after this step
+    const conn = document.getElementById('ol-conn-' + n);
+    if (conn) conn.classList.add('is-lit');
+  } else if (iconEl && STEP_ICONS[n]) {
+    iconEl.innerHTML = STEP_ICONS[n];
+  }
+
+  if (desc) descEl.textContent = desc;
+
+  if (result) {
+    // Render results as chips split on ·
+    const parts = result.split(/\s*·\s*/).filter(Boolean);
+    resEl.innerHTML = '<div class="ol-result-chips">' +
+      parts.map(p => `<span class="ol-chip">${p}</span>`).join('') +
+      '</div>';
+    resEl.style.display = 'block';
+  }
+
+  // Hotspot callout for step 3
+  if (hotspots && hotspots.length) {
+    const hotEl = document.getElementById('ol-hotspot-3');
+    if (hotEl) {
+      hotEl.innerHTML = hotspots.map(z =>
+        `<span class="ol-hotspot-line">&#9888; Hotspot: ${z}</span>`
+      ).join(' ');
+      hotEl.style.display = 'block';
+    }
+  }
+}
+
+/* ── Progress bar ── */
+function setProgress(pct) {
+  document.getElementById('ol-progress-fill').style.width = pct + '%';
+}
+
+/* ── Subtitle text ── */
+function setSubtitle(text) {
+  document.getElementById('ol-subtitle').textContent = text;
+}
+
+/* ── Handle a single pipeline event ── */
+const STEP_PROGRESS = { 1: 15, 2: 35, 3: 60, 4: 80, 5: 95 };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Minimum dwell times (ms) so each step is clearly visible
+const DWELL = { step_start: 1100, step_done: 700, step_skip: 700 };
+
+function applyEvent(ev) {
+  switch (ev.type) {
+    case 'init':
+      setSubtitle(`Processing ${ev.total_bins} bins across Accra — ${ev.total_steps} steps`);
+      setProgress(5);
+      break;
+    case 'step_start':
+      setStep(ev.step, 'running', ev.desc);
+      setSubtitle(`Step ${ev.step} of 5  ·  ${ev.name}`);
+      setProgress(STEP_PROGRESS[ev.step] - 8);
+      break;
+    case 'step_done':
+      setStep(ev.step, 'done', null, ev.result, ev.hotspots);
+      setProgress(STEP_PROGRESS[ev.step]);
+      break;
+    case 'step_skip':
+      setStep(ev.step, 'skip', null, ev.result);
+      setProgress(STEP_PROGRESS[ev.step]);
+      break;
+    case 'error':
+      setSubtitle('An error occurred');
+      break;
+    case 'pipeline_done':
+      setProgress(100);
+      setSubtitle('Complete!');
+      document.getElementById('ol-spinner').style.display = 'none';
+      document.getElementById('ol-check').style.display   = 'flex';
+      document.getElementById('ol-time').textContent      = ev.elapsed;
+      document.getElementById('ol-done-banner').classList.add('show');
+      setTimeout(() => { window.location.href = '/results'; }, 2200);
+      break;
+  }
+}
+
+/* ── Queued processor — enforces minimum dwell per step ── */
+let _queue = [];
+let _running = false;
+
+async function flushQueue() {
+  if (_running) return;
+  _running = true;
+  while (_queue.length) {
+    const ev = _queue.shift();
+    applyEvent(ev);
+    const dwell = DWELL[ev.type] || 0;
+    if (dwell) await sleep(dwell);
+  }
+  _running = false;
+}
+
+function enqueue(ev) {
+  _queue.push(ev);
+  flushQueue();
+}
+
+/* ── Stream pipeline events via fetch ReadableStream ── */
+async function streamPipeline(formData) {
+  showOverlay();
+  try {
+    const res = await fetch('/run-stream', { method: 'POST', body: formData });
+    if (!res.ok || !res.body) {
+      window.location.href = '/results';
+      return;
+    }
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let   buffer  = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try { enqueue(JSON.parse(line.slice(6))); } catch (_) {}
+        }
+      }
+    }
+    // Ensure any remaining queued events finish before we let pipeline_done redirect
+  } catch (err) {
+    console.error('Stream error:', err);
+    window.location.href = '/results';
+  }
+}
+
+/* ── Intercept demo form ── */
+document.getElementById('form-demo').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const fd = new FormData(this);
+  streamPipeline(fd);
+});
+
+/* ── Intercept upload form ── */
+document.getElementById('form-upload').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const fd = new FormData(this);
+  streamPipeline(fd);
+});
+</script>
+
+</body>
+</html>

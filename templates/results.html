@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IWMRO — Results Dashboard</title>
+  <link rel="stylesheet" href="/static/tailwind.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="/static/app.css?v=2">
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="bg-green-900 text-white shadow-md">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center font-bold text-xs">W</div>
+      <div>
+        <div class="font-bold text-sm leading-tight tracking-wide">IWMRO</div>
+        <div class="text-green-300 text-xs">Results Dashboard</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/"
+        class="text-sm text-green-200 hover:text-white border border-green-600 hover:border-green-400 px-4 py-1.5 rounded-lg transition-colors">
+        Run Again
+      </a>
+      <a href="/download/powerbi_bins.csv"
+        class="text-sm bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded-lg font-medium transition-colors">
+        Download CSV
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hotspot Alert ────────────────────────────────────────────────────────── -->
+{% if hotspot_zones %}
+<div class="bg-amber-500 text-white px-6 py-3 flex items-center gap-3 text-sm font-medium">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  <span>
+    <strong>Hotspot{{ hotspot_zones|length > 1 and 's' or '' }} detected:</strong>
+    {{ hotspot_zones | join(' &nbsp;·&nbsp; ') }}
+    &nbsp;— priority collection required
+  </span>
+</div>
+{% endif %}
+
+<!-- ── KPI Cards ───────────────────────────────────────────────────────────── -->
+<div class="bg-white border-b border-gray-100 py-5">
+  <div class="max-w-7xl mx-auto px-6 kpi-grid">
+
+    <!-- Bins Monitored -->
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:#dcfce7;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </div>
+      <div>
+        <div class="kpi-value">{{ total_bins }}</div>
+        <div class="kpi-label">Bins Monitored</div>
+      </div>
+    </div>
+
+    <!-- High-Priority Bins -->
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:{% if high_pct > 30 %}#fee2e2{% else %}#fef3c7{% endif %};">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{% if high_pct > 30 %}#dc2626{% else %}#d97706{% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div>
+        <div class="kpi-value" style="color:{% if high_pct > 30 %}#dc2626{% else %}#1b5e20{% endif %};">
+          {{ high_priority }}<span style="font-size:15px;font-weight:500;color:#9ca3af;"> ({{ high_pct }}%)</span>
+        </div>
+        <div class="kpi-label">High-Priority Bins</div>
+      </div>
+    </div>
+
+    <!-- Trucks Dispatched -->
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:#dbeafe;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      </div>
+      <div>
+        <div class="kpi-value">{{ trucks }}</div>
+        <div class="kpi-label">Trucks Dispatched</div>
+      </div>
+    </div>
+
+    <!-- Total Route Distance -->
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:#f3e8ff;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      </div>
+      <div>
+        <div class="kpi-value">{{ total_km }}<span style="font-size:15px;font-weight:500;color:#9ca3af;"> km</span></div>
+        <div class="kpi-label">Total Route Distance</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Main Dashboard ──────────────────────────────────────────────────────── -->
+<div class="max-w-7xl mx-auto px-6 py-6">
+
+  <!-- Map + Stats grid -->
+  <div class="main-grid grid gap-5" style="grid-template-columns: 1fr 340px;">
+
+    <!-- ── Leaflet Map ── -->
+    <div class="dash-card" style="display:flex;flex-direction:column;">
+      <div class="dash-card-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Accra Waste Bin Map
+        <span class="ml-auto text-xs text-gray-400 font-normal" id="map-counter">{{ total_bins }} bins across {{ hotspots|length }} zones</span>
+      </div>
+      <!-- Zone filter pills -->
+      <div class="px-3 pt-3 pb-1 flex flex-wrap gap-1.5 border-b border-gray-100">
+        <button class="zone-pill active" onclick="filterZone(null, this)">All Zones</button>
+        {% for z in hotspots %}
+        <button class="zone-pill{% if z.is_hotspot == 'True' %} border-red-200 text-red-700{% endif %}"
+          onclick="filterZone('{{ z.zone }}', this)">
+          {{ z.zone }}{% if z.is_hotspot == 'True' %} 🔴{% endif %}
+        </button>
+        {% endfor %}
+      </div>
+      <div class="dash-card-body" style="padding:12px;flex:1;display:flex;flex-direction:column;">
+        <div id="map" style="flex:1;min-height:280px;border-radius:8px;overflow:hidden;"></div>
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center gap-4 mt-3 px-1 text-xs text-gray-500">
+          <div class="flex items-center gap-1.5">
+            <div class="legend-dot" style="background:#1e88e5;"></div> Plastic
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="legend-dot" style="background:#43a047;"></div> Organic
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="legend-dot" style="background:#7c3aed;"></div> Electronic
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="legend-dot" style="background:#9e9e9e;"></div> Metal
+          </div>
+          <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-gray-200">
+            <div class="legend-dot" style="background:#dc2626; opacity:.7;"></div> High Priority (red border)
+          </div>
+          <span class="ml-auto text-gray-400">Marker size = fill level</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right sidebar ── -->
+    <div class="flex flex-col gap-4">
+
+      <!-- Waste Breakdown Chart -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          Waste Breakdown
+        </div>
+        <div class="dash-card-body">
+          <canvas id="wasteChart" height="200"></canvas>
+          <div class="mt-3 space-y-1.5">
+            {% for wtype, pct in waste_pct.items() %}
+            <div class="flex items-center justify-between text-xs text-gray-600">
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full"
+                  style="background: {% if wtype=='plastic' %}#1e88e5{% elif wtype=='organic' %}#43a047{% elif wtype=='electronic' %}#7c3aed{% else %}#9e9e9e{% endif %};"></div>
+                {{ wtype | capitalize }}
+              </div>
+              <span class="font-semibold text-gray-800">{{ pct }}%</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone Analysis -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Zone Analysis
+        </div>
+        <div class="dash-card-body">
+          <div class="space-y-3">
+            {% for z in hotspots %}
+            {% set fill_pct = (z.mean_fill_level | float * 100) | round | int %}
+            <div class="zone-row flex items-center gap-2 text-xs rounded-lg px-1 py-0.5 cursor-pointer transition-colors"
+              data-zone="{{ z.zone }}"
+              onclick="filterZone('{{ z.zone }}', document.querySelector('.zone-pill[onclick*=\'{{ z.zone }}\']'))">
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-gray-800 truncate">{{ z.zone }}</div>
+                <div class="text-gray-400">{{ z.dominant_type | capitalize }}</div>
+              </div>
+              <div class="fill-bar-wrap">
+                <div class="fill-bar {% if z.is_hotspot == 'True' %}hot{% endif %}"
+                  style="width: {{ fill_pct }}%;"></div>
+              </div>
+              <span class="w-8 text-right font-medium text-gray-700">{{ fill_pct }}%</span>
+              {% if z.is_hotspot == 'True' %}
+                <span class="badge-hot">HOT</span>
+              {% else %}
+                <span class="badge-ok">OK</span>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Analytics Charts Row ── -->
+  <div class="charts-row" style="margin-top:2rem;">
+
+    <!-- Fill Level Distribution -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Fill Level Distribution
+      </div>
+      <div class="dash-card-body">
+        <canvas id="fillDistChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Priority by Zone -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Collection Priority by Zone
+      </div>
+      <div class="dash-card-body">
+        <canvas id="zonePriorityChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Truck Load & Distance -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Truck Load &amp; Distance
+      </div>
+      <div class="dash-card-body">
+        <canvas id="truckChart" height="220"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── AI Report / Insights ── -->
+  <div style="margin-top:2rem;">
+    <div class="dash-card">
+      <div class="dash-card-header" style="justify-content:space-between;">
+        <div class="flex items-center gap-2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><circle cx="18" cy="5" r="3" fill="#4ade80" stroke="none"/></svg>
+          {% if openai_available %}
+          Community Campaign Report
+          <span class="text-xs font-normal text-gray-400">AI-generated &middot; GPT-4o mini</span>
+          {% else %}
+          AI Collection Insights
+          <span class="text-xs font-normal text-gray-400">GPT-4o mini</span>
+          {% endif %}
+        </div>
+        {% if openai_available %}
+        <div class="flex items-center gap-2">
+          <button id="ai-pdf-btn" onclick="downloadAIReportPDF()" style="display:none;"
+            class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+            style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PDF
+          </button>
+          <button id="ai-generate-btn" onclick="generateAIReport()"
+            class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+            style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Regenerate
+          </button>
+        </div>
+        {% else %}
+        <span class="text-xs text-gray-400 italic">Set OPENAI_API_KEY to enable</span>
+        {% endif %}
+      </div>
+      <div class="dash-card-body" id="ai-report-body">
+        {% if not openai_available %}
+        <div id="ai-placeholder" class="text-sm text-gray-400 text-center py-6">
+          Configure your OpenAI API key on the <a href="/" class="text-green-700 hover:underline">home page</a> to enable AI-generated reports.
+        </div>
+        {% else %}
+        <div id="ai-placeholder" class="text-sm text-gray-400 text-center py-6">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-block mb-1" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><br>
+          Generating AI report…
+        </div>
+        {% endif %}
+        <div id="ai-content" style="display:none; font-size:13.5px; line-height:1.75; color:#1f2937;"></div>
+        <div id="ai-error" style="display:none;" class="text-sm text-red-500 py-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Route Summary ── -->
+  <div style="margin-top:2rem;">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Truck Route Summary
+      </div>
+      <div class="dash-card-body" style="padding: 0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Truck</th>
+              <th>Bins</th>
+              <th>Est. Distance</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in route_summary %}
+            <tr>
+              <td class="font-semibold text-green-900">{{ r.truck_id }}</td>
+              <td>{{ r.num_bins }}</td>
+              <td>{{ r.total_km }} km</td>
+              <td><span class="badge-ok">Optimised</span></td>
+            </tr>
+            {% endfor %}
+            {% if not route_summary %}
+            <tr><td colspan="4" class="text-center text-gray-400 py-4">No route data available</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Campaign Report (static — shown only without API key) ── -->
+  {% if not openai_available %}
+  {% set TIPS = {
+    'plastic':    ['Rinse and flatten bottles before disposal.',
+                   'Avoid single-use sachets — use refillable water containers.',
+                   'Deposit plastic at the Kaneshie Recycling Point for 20 Gp credit.'],
+    'organic':    ['Use designated green bins for food scraps.',
+                   'Compost at home — contact AMA for a free starter kit.',
+                   'Do NOT dump food waste in drainage channels.'],
+    'metal':      ['Contact the Tema Scrap Collection Service (+233-XX-XXX-XXXX).',
+                   'Do not burn metal waste — toxic fumes are a serious health hazard.',
+                   'Arrange bulky metal items for scheduled kerb-side collection.'],
+    'electronic': ['Never dispose of e-waste in household bins or open dumps.',
+                   'Drop off phones, batteries and cables at the Tema E-Waste Facility.',
+                   'Businesses: contact AMA for a scheduled bulk e-waste collection.']
+  } %}
+
+  <div class="campaign-doc" style="margin-top:2rem;">
+
+    <!-- Document header -->
+    <div class="campaign-doc-header">
+      <div class="flex items-start gap-4">
+        <div class="campaign-doc-emblem">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <div class="campaign-doc-title">Community Waste Campaign Report</div>
+          <div class="campaign-doc-org">Accra Metropolitan Assembly &mdash; Waste Management Division</div>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="campaign-doc-date">{{ run_timestamp[:10].replace('-', ' / ') if run_timestamp else '' }}</div>
+        <div class="campaign-doc-run">IWMRO Pipeline v1.0 &nbsp;·&nbsp; Auto-generated</div>
+        <button onclick="downloadCampaignPDF()"
+          class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors mt-2 ml-auto"
+          style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="campaign-kpi-strip">
+      <div class="campaign-kpi">
+        <div class="campaign-kpi-val">{{ total_bins }}</div>
+        <div class="campaign-kpi-lbl">Bins Monitored</div>
+      </div>
+      <div class="campaign-kpi-sep"></div>
+      <div class="campaign-kpi">
+        <div class="campaign-kpi-val" style="color:#dc2626;">{{ high_priority }}</div>
+        <div class="campaign-kpi-lbl">High Priority &nbsp;<span style="font-weight:400;color:#9ca3af;">({{ high_pct }}%)</span></div>
+      </div>
+      <div class="campaign-kpi-sep"></div>
+      <div class="campaign-kpi">
+        <div class="campaign-kpi-val">{{ trucks }}</div>
+        <div class="campaign-kpi-lbl">Trucks Dispatched</div>
+      </div>
+      <div class="campaign-kpi-sep"></div>
+      <div class="campaign-kpi">
+        <div class="campaign-kpi-val">{{ total_km }}<span style="font-size:15px;font-weight:500;color:#9ca3af;"> km</span></div>
+        <div class="campaign-kpi-lbl">Total Route Distance</div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="campaign-body">
+
+      <!-- Left: breakdown + hotspots + actions -->
+      <div class="campaign-left">
+
+        <div class="campaign-section-label">Waste Breakdown This Collection</div>
+        <div class="campaign-waste-pills">
+          {% for wtype, pct in waste_pct.items() %}
+          <div class="campaign-waste-pill"
+            style="--pdot:{% if wtype=='plastic' %}#1e88e5{% elif wtype=='organic' %}#43a047{% elif wtype=='electronic' %}#7c3aed{% else %}#9e9e9e{% endif %};
+                   --pbg:{% if wtype=='plastic' %}#eff6ff{% elif wtype=='organic' %}#f0fdf4{% elif wtype=='electronic' %}#f5f3ff{% else %}#f9fafb{% endif %};
+                   --pborder:{% if wtype=='plastic' %}#bfdbfe{% elif wtype=='organic' %}#bbf7d0{% elif wtype=='electronic' %}#ddd6fe{% else %}#e5e7eb{% endif %};">
+            <span class="pill-dot"></span>
+            <span class="pill-name">{{ wtype | capitalize }}</span>
+            <span class="pill-pct">{{ pct }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if hotspot_zones %}
+        <div class="campaign-alert-row">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span><strong>Hotspot zones requiring urgent collection:</strong> {{ hotspot_zones | join(', ') }}</span>
+        </div>
+        {% endif %}
+
+        <div class="campaign-info-row">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span><strong>Next scheduled collection:</strong> 48 hours from report generation</span>
+        </div>
+
+
+      </div>
+
+      <!-- Right: community tips callout -->
+      <div class="campaign-right">
+        <div class="campaign-tips-card tips-{{ dominant_type }}">
+          <div class="tips-eyebrow">Community Guidance &nbsp;·&nbsp; {{ dominant_type | capitalize }} Waste Focus</div>
+          <div class="tips-headline">
+            {{ waste_pct.get(dominant_type, 0) }}% of bins this collection
+            {% if dominant_type == 'plastic' %}contained plastic
+            {% elif dominant_type == 'organic' %}contained organic waste
+            {% elif dominant_type == 'metal' %}contained metal scrap
+            {% elif dominant_type == 'electronic' %}contained e-waste
+            {% else %}of mixed waste recorded{% endif %}
+          </div>
+          <div class="tips-subhead">Action required from residents &amp; businesses:</div>
+          <div class="tips-list">
+            {% for tip in TIPS.get(dominant_type, ['Sort waste into correct bins before disposal.']) %}
+            <div class="tip-row">
+              <span class="tip-arrow">&#10132;</span>
+              <span>{{ tip }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="tips-footer">
+            For queries contact the Accra Metropolitan Assembly &mdash; Waste Division
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Hidden pre for copy function -->
+    <pre id="campaign-pre" style="display:none;">{{ campaign_text }}</pre>
+
+  </div>
+  {% endif %}{# /not openai_available #}
+
+  <!-- ── Pipeline Info ── -->
+  <div style="margin-top:2rem;" class="bg-gray-50 border border-gray-200 rounded-xl px-6 py-3 pipeline-meta text-xs text-gray-400">
+    <span>
+      <strong class="text-gray-600">Last run:</strong>
+      {{ run_timestamp[:19].replace('T', ' ') if run_timestamp else 'unknown' }}
+    </span>
+    <span>
+      <strong class="text-gray-600">Pipeline time:</strong> {{ elapsed_s }} s
+    </span>
+    <span>
+      <strong class="text-gray-600">CLIP classifier:</strong>
+      {% if clip_available %}
+        <span class="text-green-600">Available</span>
+      {% else %}
+        <span class="text-gray-400">Not installed</span>
+      {% endif %}
+    </span>
+    <a href="/" class="text-green-700 hover:underline font-medium">Run again &rarr;</a>
+  </div>
+
+</div>
+
+<!-- ── Report Preview Modal ────────────────────────────────────────────────── -->
+<div id="pv-backdrop" class="preview-backdrop" style="display:none" onclick="closePreview()"></div>
+<div id="pv-modal" class="preview-modal" style="display:none">
+  <div class="preview-header">
+    <div>
+      <div class="preview-title" id="pv-title">Report</div>
+      <div class="preview-subtitle" id="pv-subtitle"></div>
+    </div>
+    <div class="flex items-center gap-2">
+      <a id="pv-dl-link" href="#" download class="text-xs font-semibold text-green-700 hover:underline px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 hover:bg-green-100 transition-colors">
+        Download
+      </a>
+      <button class="preview-close" onclick="closePreview()">&#x2715;</button>
+    </div>
+  </div>
+  <div class="preview-body" id="pv-body">
+    <div class="flex items-center justify-center h-full text-gray-400 text-sm">Loading…</div>
+  </div>
+</div>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────────────── -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* ── Embed data from server ── */
+const BINS      = {{ bins_json | safe }};
+const TYPE_DATA = {{ waste_pct | tojson }};
+
+/* ── Leaflet map ── */
+const map = L.map('map', { zoomControl: true }).setView([5.575, -0.185], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19,
+}).addTo(map);
+
+const COLOURS = { plastic: '#1e88e5', organic: '#43a047', metal: '#9e9e9e', electronic: '#7c3aed' };
+
+/* ── Zone filtering state (must be declared before BINS.forEach) ── */
+let allMarkers = [];
+let activeZone = null;
+
+BINS.forEach(bin => {
+  const colour = COLOURS[bin.waste_type] || '#888';
+  const isHot  = bin.collection_priority === 'high';
+  const r      = 6 + Math.round(bin.fill_level * 10);   // 6–16 px
+
+  const marker = L.circleMarker([bin.latitude, bin.longitude], {
+    radius:      r,
+    fillColor:   colour,
+    fillOpacity: 0.82,
+    color:       isHot ? '#dc2626' : '#fff',
+    weight:      isHot ? 2.5 : 1,
+    opacity:     1,
+  }).addTo(map);
+
+  allMarkers.push({ marker, bin });
+
+  marker.bindPopup(`
+    <div style="font-family:Inter,sans-serif;min-width:160px;font-size:13px">
+      <div style="font-weight:700;margin-bottom:6px;color:#1b5e20">${bin.bin_id}</div>
+      <div style="color:#666;margin-bottom:4px">${bin.location_name}</div>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="color:#888;padding:2px 0">Type</td>
+            <td style="font-weight:600;text-transform:capitalize">${bin.waste_type}</td></tr>
+        <tr><td style="color:#888;padding:2px 0">Fill</td>
+            <td style="font-weight:600">${Math.round(bin.fill_level*100)}%</td></tr>
+        <tr><td style="color:#888;padding:2px 0">Priority</td>
+            <td>${isHot
+              ? '<span style="color:#dc2626;font-weight:700">HIGH</span>'
+              : '<span style="color:#43a047">Normal</span>'}</td></tr>
+        <tr><td style="color:#888;padding:2px 0">Truck</td>
+            <td>${bin.truck_id || '-'}</td></tr>
+        <tr><td style="color:#888;padding:2px 0">Seq.</td>
+            <td>${bin.route_sequence}</td></tr>
+      </table>
+    </div>
+  `, { maxWidth: 200 });
+});
+
+/* ── Zone filtering ── */
+function filterZone(zone, btn) {
+  activeZone = zone;
+
+  // Update pill styles
+  document.querySelectorAll('.zone-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  let visible = 0;
+  allMarkers.forEach(({ marker, bin }) => {
+    const show = !zone || bin.location_name === zone;
+    if (show) { marker.addTo(map); visible++; }
+    else       { marker.remove(); }
+  });
+
+  // Update counter
+  const total = allMarkers.length;
+  document.getElementById('map-counter').textContent =
+    zone ? `${visible} bins in ${zone}` : `${total} bins across {{ hotspots|length }} zones`;
+
+  // Re-fit map to visible markers
+  if (zone && visible > 0) {
+    const pts = allMarkers
+      .filter(({ bin }) => bin.location_name === zone)
+      .map(({ marker }) => marker.getLatLng());
+    map.fitBounds(L.latLngBounds(pts).pad(0.3));
+  } else {
+    map.setView([5.575, -0.185], 12);
+  }
+
+  // Highlight matching zone row in Zone Analysis panel
+  document.querySelectorAll('.zone-row').forEach(row => {
+    row.style.background = (zone && row.dataset.zone === zone) ? '#f0fdf4' : '';
+  });
+}
+
+/* ── Report preview ── */
+function openPreview() {
+  document.getElementById('pv-backdrop').style.display = 'block';
+  document.getElementById('pv-modal').style.display    = 'flex';
+}
+function closePreview() {
+  document.getElementById('pv-backdrop').style.display = 'none';
+  document.getElementById('pv-modal').style.display    = 'none';
+  document.getElementById('pv-body').innerHTML =
+    '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Loading\u2026</div>';
+}
+
+function copyReport() {
+  const text = document.getElementById('campaign-pre').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.style.background = '#dcfce7';
+    btn.style.color = '#166534';
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg> Copy text`;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 2000);
+  });
+}
+
+async function previewFile(filename, type, title, subtitle) {
+  document.getElementById('pv-title').textContent    = title;
+  document.getElementById('pv-subtitle').textContent = subtitle;
+  document.getElementById('pv-dl-link').href         = '/download/' + filename;
+  document.getElementById('pv-dl-link').setAttribute('download', filename);
+  openPreview();
+
+  const body = document.getElementById('pv-body');
+
+  if (type === 'html') {
+    body.innerHTML = `<iframe class="preview-iframe" src="/download/${filename}"></iframe>`;
+    return;
+  }
+
+  try {
+    const res  = await fetch('/download/' + filename);
+    const text = await res.text();
+
+    if (type === 'json') {
+      const pretty = JSON.stringify(JSON.parse(text), null, 2);
+      body.innerHTML = `<pre class="preview-json">${escHtml(pretty)}</pre>`;
+    } else if (type === 'csv') {
+      body.innerHTML = buildCsvTable(text);
+    }
+  } catch (e) {
+    body.innerHTML = `<div class="p-6 text-red-600 text-sm">Failed to load: ${e.message}</div>`;
+  }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildCsvTable(csv) {
+  const rows = csv.trim().split('\n').map(r => r.split(','));
+  if (!rows.length) return '<div class="p-4 text-gray-400">Empty file</div>';
+  const [head, ...body] = rows;
+  const ths = head.map(h => `<th>${escHtml(h.trim())}</th>`).join('');
+  const trs = body.map(row =>
+    `<tr>${row.map(c => `<td title="${escHtml(c.trim())}">${escHtml(c.trim())}</td>`).join('')}</tr>`
+  ).join('');
+  return `<div style="overflow:auto;height:100%"><table class="preview-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+}
+
+/* ── AI Report Generator ── */
+{% if openai_available %}
+window.addEventListener('load', () => generateAIReport());
+{% endif %}
+
+async function generateAIReport() {
+  const btn         = document.getElementById('ai-generate-btn');
+  const placeholder = document.getElementById('ai-placeholder');
+  const content     = document.getElementById('ai-content');
+  const errEl       = document.getElementById('ai-error');
+
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="animate-spin" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating…`;
+  btn.style.color  = '#6b7280';
+  btn.style.background = '#f9fafb';
+  btn.style.borderColor = '#e5e7eb';
+
+  placeholder.style.display = 'none';
+  errEl.style.display = 'none';
+  content.style.display = 'block';
+  content.innerHTML = '';
+
+  let buffer = '';
+
+  function renderBuffer() {
+    const html = buffer
+      .replace(/## (.+)/g, '<h4 style="font-weight:700;color:#1b5e20;margin:1.25em 0 0.35em;font-size:12px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #d1fae5;padding-bottom:3px;">$1</h4>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n\n/g, '</p><p style="margin:0 0 0.6em;">')
+      .replace(/\n- /g, '</p><li style="margin-left:1.2em;list-style:disc;">')
+      .replace(/\n/g, ' ');
+    content.innerHTML = '<p style="margin:0 0 0.6em;">' + html + '</p>';
+  }
+
+  try {
+    const res = await fetch('/generate-report');
+    if (!res.ok) {
+      const msg = await res.text();
+      errEl.textContent = 'Error: ' + msg;
+      errEl.style.display = 'block';
+      content.style.display = 'none';
+      return;
+    }
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let   rbuf    = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      rbuf += decoder.decode(value, { stream: true });
+      const lines = rbuf.split('\n');
+      rbuf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(line.slice(6));
+          if (ev.error) {
+            errEl.textContent = 'Error: ' + ev.error;
+            errEl.style.display = 'block';
+            content.style.display = 'none';
+            return;
+          }
+          if (ev.done) break;
+          if (ev.text) { buffer += ev.text; renderBuffer(); }
+        } catch (_) {}
+      }
+    }
+  } catch (err) {
+    errEl.textContent = 'Request failed: ' + err.message;
+    errEl.style.display = 'block';
+    content.style.display = 'none';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg> Regenerate`;
+    btn.style.color = '#166534';
+    btn.style.background = '#f0fdf4';
+    btn.style.borderColor = '#bbf7d0';
+    // Show PDF button once content is ready
+    const pdfBtn = document.getElementById('ai-pdf-btn');
+    if (pdfBtn && document.getElementById('ai-content').style.display !== 'none') {
+      pdfBtn.style.display = 'flex';
+      pdfBtn.style.background = '#eff6ff';
+      pdfBtn.style.color = '#1d4ed8';
+      pdfBtn.style.border = '1px solid #bfdbfe';
+    }
+  }
+}
+
+/* ── PDF export helpers ── */
+const _PDF_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, sans-serif; font-size: 13px; color: #1f2937; padding: 40px; max-width: 800px; margin: 0 auto; }
+  .doc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #16a34a; }
+  .doc-title { font-size: 18px; font-weight: 700; color: #1b5e20; }
+  .doc-org { font-size: 12px; color: #6b7280; margin-top: 3px; }
+  .doc-meta { text-align: right; font-size: 11px; color: #9ca3af; line-height: 1.6; }
+  .doc-badge { display: inline-block; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-top: 4px; }
+  h4 { font-weight: 700; color: #1b5e20; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid #d1fae5; padding-bottom: 3px; margin: 1.4em 0 0.5em; }
+  p { line-height: 1.75; margin-bottom: 0.6em; }
+  li { margin-left: 1.4em; list-style: disc; line-height: 1.75; }
+  strong { font-weight: 600; }
+  .kpi-strip { display: flex; gap: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+  .kpi-item { flex: 1; padding: 10px 14px; border-right: 1px solid #e5e7eb; }
+  .kpi-item:last-child { border-right: none; }
+  .kpi-val { font-size: 18px; font-weight: 700; color: #1b5e20; }
+  .kpi-lbl { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+  .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; }
+  @page { margin: 1.5cm; }
+`;
+
+function downloadAIReportPDF() {
+  const content = document.getElementById('ai-content');
+  if (!content || content.style.display === 'none') return;
+  const ts = '{{ run_timestamp[:10].replace("-", " / ") if run_timestamp else "" }}';
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>IWMRO Community Campaign Report</title>
+<style>${_PDF_STYLES}</style></head><body>
+<div class="doc-header">
+  <div>
+    <div class="doc-title">Community Campaign Report</div>
+    <div class="doc-org">Accra Metropolitan Assembly &mdash; Waste Management Division</div>
+    <span class="doc-badge">AI-generated &middot; GPT-4o mini</span>
+  </div>
+  <div class="doc-meta">
+    ${ts}<br>IWMRO Pipeline v1.0<br>Auto-generated
+  </div>
+</div>
+<div class="kpi-strip">
+  <div class="kpi-item"><div class="kpi-val">{{ total_bins }}</div><div class="kpi-lbl">Bins Monitored</div></div>
+  <div class="kpi-item"><div class="kpi-val" style="color:#dc2626;">{{ high_priority }}</div><div class="kpi-lbl">High Priority ({{ high_pct }}%)</div></div>
+  <div class="kpi-item"><div class="kpi-val">{{ trucks }}</div><div class="kpi-lbl">Trucks Dispatched</div></div>
+  <div class="kpi-item"><div class="kpi-val">{{ total_km }}<span style="font-size:12px;font-weight:500;color:#9ca3af;"> km</span></div><div class="kpi-lbl">Route Distance</div></div>
+</div>
+${content.innerHTML}
+<div class="footer">Generated by the IWMRO system. For queries contact Accra Metropolitan Assembly &mdash; Waste Division.</div>
+</body></html>`);
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 600);
+}
+
+function downloadCampaignPDF() {
+  const ts = '{{ run_timestamp[:10].replace("-", " / ") if run_timestamp else "" }}';
+  {% set WASTE_ROWS = [] %}
+  {% for wtype, pct in waste_pct.items() %}
+  {% set _ = WASTE_ROWS.append('<tr><td style="padding:4px 8px;color:#6b7280;">' + (wtype | capitalize) + '</td><td style="padding:4px 8px;font-weight:600;">' + pct|string + '%</td></tr>') %}
+  {% endfor %}
+  {% set TIPS_PDF = {
+    'plastic':    ['Rinse and flatten bottles before disposal.',
+                   'Avoid single-use sachets — use refillable water containers.',
+                   'Deposit plastic at the Kaneshie Recycling Point for 20 Gp credit.'],
+    'organic':    ['Use designated green bins for food scraps.',
+                   'Compost at home — contact AMA for a free starter kit.',
+                   'Do NOT dump food waste in drainage channels.'],
+    'metal':      ['Contact the Tema Scrap Collection Service (+233-XX-XXX-XXXX).',
+                   'Do not burn metal waste — toxic fumes are a serious health hazard.',
+                   'Arrange bulky metal items for scheduled kerb-side collection.'],
+    'electronic': ['Never dispose of e-waste in household bins or open dumps.',
+                   'Drop off phones, batteries and cables at the Tema E-Waste Facility.',
+                   'Businesses: contact AMA for a scheduled bulk e-waste collection.']
+  } %}
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>IWMRO Community Waste Campaign Report</title>
+<style>${_PDF_STYLES}
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th { background: #f0fdf4; color: #1b5e20; font-size: 11px; padding: 6px 8px; text-align: left; border-bottom: 2px solid #d1fae5; }
+  td { font-size: 12px; border-bottom: 1px solid #f3f4f6; }
+  .alert { background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:8px 12px; margin:12px 0; font-size:12px; color:#92400e; }
+  .tips-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:14px 16px; margin-top:16px; }
+  .tips-title { font-weight:700; color:#1b5e20; font-size:12px; margin-bottom:8px; }
+  .tip { display:flex; gap:8px; font-size:12px; line-height:1.6; margin-bottom:6px; }
+  .tip-arrow { color:#16a34a; font-weight:700; flex-shrink:0; }
+</style></head><body>
+<div class="doc-header">
+  <div>
+    <div class="doc-title">Community Waste Campaign Report</div>
+    <div class="doc-org">Accra Metropolitan Assembly &mdash; Waste Management Division</div>
+  </div>
+  <div class="doc-meta">${ts}<br>IWMRO Pipeline v1.0<br>Auto-generated</div>
+</div>
+<div class="kpi-strip">
+  <div class="kpi-item"><div class="kpi-val">{{ total_bins }}</div><div class="kpi-lbl">Bins Monitored</div></div>
+  <div class="kpi-item"><div class="kpi-val" style="color:#dc2626;">{{ high_priority }}</div><div class="kpi-lbl">High Priority ({{ high_pct }}%)</div></div>
+  <div class="kpi-item"><div class="kpi-val">{{ trucks }}</div><div class="kpi-lbl">Trucks Dispatched</div></div>
+  <div class="kpi-item"><div class="kpi-val">{{ total_km }}<span style="font-size:12px;font-weight:500;color:#9ca3af;"> km</span></div><div class="kpi-lbl">Route Distance</div></div>
+</div>
+<h4>Waste Breakdown This Collection</h4>
+<table><thead><tr><th>Waste Type</th><th>% of Bins</th></tr></thead><tbody>
+{{ WASTE_ROWS | join('') }}
+</tbody></table>
+{% if hotspot_zones %}
+<div class="alert">&#9888; <strong>Hotspot zones requiring urgent collection:</strong> {{ hotspot_zones | join(', ') }}</div>
+{% endif %}
+<div style="font-size:12px;color:#6b7280;margin-bottom:16px;"><strong style="color:#1f2937;">Next scheduled collection:</strong> 48 hours from report generation</div>
+<div class="tips-box">
+  <div class="tips-title">Community Guidance &mdash; {{ dominant_type | capitalize }} Waste Focus</div>
+  <div style="font-size:12px;color:#166534;margin-bottom:10px;">{{ waste_pct.get(dominant_type, 0) }}% of bins this collection contained {{ dominant_type }} waste</div>
+  {% for tip in TIPS_PDF.get(dominant_type, ['Sort waste into correct bins before disposal.']) %}
+  <div class="tip"><span class="tip-arrow">&#10132;</span><span>{{ tip }}</span></div>
+  {% endfor %}
+</div>
+<div class="footer">Generated by the IWMRO system. For queries contact Accra Metropolitan Assembly &mdash; Waste Division.</div>
+</body></html>`);
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 600);
+}
+
+/* ── Shared Chart.js defaults ── */
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.font.size   = 11;
+Chart.defaults.color       = '#6b7280';
+
+const _TT = {                          /* shared tooltip style */
+  backgroundColor: '#111827',
+  titleColor:      '#f9fafb',
+  bodyColor:       '#d1d5db',
+  padding:         { x: 12, y: 8 },
+  cornerRadius:    8,
+  displayColors:   false,
+};
+const _GC  = '#f3f4f6';                /* grid line colour */
+const _TK  = { color: '#9ca3af' };     /* axis tick colour */
+const _LEG = {                         /* shared legend style */
+  position: 'bottom',
+  labels: { boxWidth: 10, padding: 14 },
+};
+const _ANI = { duration: 550 };        /* consistent animation */
+
+/* ── 1. Waste Breakdown Donut ── */
+const labels = Object.keys(TYPE_DATA).map(k => k.charAt(0).toUpperCase() + k.slice(1));
+const values = Object.values(TYPE_DATA);
+const bgCols = Object.keys(TYPE_DATA).map(k =>
+  k === 'plastic' ? '#1e88e5' : k === 'organic' ? '#43a047' : k === 'electronic' ? '#7c3aed' : '#9e9e9e'
+);
+new Chart(document.getElementById('wasteChart'), {
+  type: 'doughnut',
+  data: { labels, datasets: [{ data: values, backgroundColor: bgCols, borderWidth: 2, borderColor: '#fff' }] },
+  options: {
+    cutout: '68%',
+    animation: _ANI,
+    plugins: {
+      legend: { display: false },
+      tooltip: { ..._TT, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } },
+    },
+  },
+});
+
+/* ── 2. Fill Level Distribution ── */
+const fillBuckets = { '0–25%': 0, '25–50%': 0, '50–75%': 0, '75–100%': 0 };
+BINS.forEach(b => {
+  const f = b.fill_level;
+  if      (f < 0.25) fillBuckets['0–25%']++;
+  else if (f < 0.50) fillBuckets['25–50%']++;
+  else if (f < 0.75) fillBuckets['50–75%']++;
+  else               fillBuckets['75–100%']++;
+});
+new Chart(document.getElementById('fillDistChart'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(fillBuckets),
+    datasets: [{
+      label: 'Bins',
+      data:  Object.values(fillBuckets),
+      backgroundColor: ['#86efac', '#fde68a', '#fdba74', '#f87171'],
+      borderRadius: 5,
+      borderSkipped: false,
+    }],
+  },
+  options: {
+    animation: _ANI,
+    plugins: {
+      legend: { display: false },
+      tooltip: { ..._TT, callbacks: { label: ctx => ` ${ctx.parsed.y} bins` } },
+    },
+    scales: {
+      y: { beginAtZero: true, grid: { color: _GC }, ticks: { ..._TK, stepSize: 1 } },
+      x: { grid: { display: false }, ticks: _TK },
+    },
+  },
+});
+
+/* ── 3. Collection Priority by Zone ── */
+const _zoneMap = {};
+BINS.forEach(b => {
+  if (!_zoneMap[b.location_name]) _zoneMap[b.location_name] = { high: 0, normal: 0 };
+  if (b.collection_priority === 'high') _zoneMap[b.location_name].high++;
+  else                                  _zoneMap[b.location_name].normal++;
+});
+const _zoneEntries = Object.entries(_zoneMap).sort((a, b) => (b[1].high + b[1].normal) - (a[1].high + a[1].normal));
+new Chart(document.getElementById('zonePriorityChart'), {
+  type: 'bar',
+  data: {
+    labels: _zoneEntries.map(([z]) => z),
+    datasets: [
+      { label: 'High',   data: _zoneEntries.map(([,d]) => d.high),   backgroundColor: '#f87171', borderRadius: 5, stack: 'a' },
+      { label: 'Normal', data: _zoneEntries.map(([,d]) => d.normal), backgroundColor: '#86efac', borderRadius: 5, stack: 'a' },
+    ],
+  },
+  options: {
+    animation: _ANI,
+    plugins: {
+      legend: _LEG,
+      tooltip: _TT,
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { ..._TK, maxRotation: 35 } },
+      y: { stacked: true, beginAtZero: true, grid: { color: _GC }, ticks: _TK },
+    },
+  },
+});
+
+/* ── Spin keyframe (for AI loading spinner) ── */
+const _ks = document.createElement('style');
+_ks.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(_ks);
+
+/* ── 4. Truck Load & Distance ── */
+const ROUTE_SUMMARY = {{ route_summary | tojson }};
+new Chart(document.getElementById('truckChart'), {
+  type: 'bar',
+  data: {
+    labels: ROUTE_SUMMARY.map(r => r.truck_id),
+    datasets: [
+      { label: 'Bins', data: ROUTE_SUMMARY.map(r => r.num_bins),                                         backgroundColor: '#60a5fa', borderRadius: 5, yAxisID: 'y'  },
+      { label: 'km',   data: ROUTE_SUMMARY.map(r => parseFloat((r.total_km || 0).toFixed(1))), backgroundColor: '#c4b5fd', borderRadius: 5, yAxisID: 'y1' },
+    ],
+  },
+  options: {
+    animation: _ANI,
+    plugins: {
+      legend: _LEG,
+      tooltip: _TT,
+    },
+    scales: {
+      x:  { grid: { display: false }, ticks: _TK },
+      y:  { beginAtZero: true, grid: { color: _GC }, ticks: _TK,
+            title: { display: true, text: 'Bins', color: '#9ca3af', font: { size: 10 } } },
+      y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: _TK,
+            title: { display: true, text: 'km',   color: '#9ca3af', font: { size: 10 } } },
+    },
+  },
+});
+</script>
+
+</body>
+</html>

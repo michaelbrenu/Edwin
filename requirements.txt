@@ -1,0 +1,39 @@
+# ============================================================
+# IWMRO — Integrated Waste Management and Recycling Optimizer
+# Python dependencies
+# ============================================================
+
+# --- AI / Machine Learning ---
+torch>=2.1.0
+torchvision>=0.16.0
+transformers>=4.40.0          # Hugging Face CLIP (zero-shot classifier)
+Pillow>=10.0.0                # Image I/O
+
+# --- Computer Vision (privacy filter) ---
+opencv-python>=4.9.0          # Face / licence-plate blurring
+
+# --- Data & Optimisation ---
+numpy>=1.26.0
+pandas>=2.2.0
+scipy>=1.13.0                 # Spatial / distance utilities
+
+# --- Reporting & Export ---
+jinja2>=3.1.0                 # HTML report templating
+matplotlib>=3.8.0             # Hotspot heat-map snapshots
+seaborn>=0.13.0
+
+# --- Web Dashboard ---
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# --- Google Sheets Integration ---
+gspread>=6.0.0                # Google Sheets API client
+oauth2client>=4.1.3           # Service-account authentication
+
+# --- AI Report Generation ---
+openai>=1.30.0                # ChatGPT API for AI-generated collection insights
+
+# --- Utilities ---
+python-dotenv>=1.0.0
+tqdm>=4.66.0

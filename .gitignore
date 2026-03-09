@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.so
+
+# Secrets & credentials
+.env
+creds.json
+*.json.key
+
+# Data exports (runtime-generated)
+data/exports/
+data/raw/
+data/processed/
+
+# Models (large binary files)
+models/
+
+# Logs
+*.log
+
+# Node (Tailwind build tooling)
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
