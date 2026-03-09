@@ -10,7 +10,7 @@ transformers>=4.40.0          # Hugging Face CLIP (zero-shot classifier)
 Pillow>=10.0.0                # Image I/O
 
 # --- Computer Vision (privacy filter) ---
-opencv-python>=4.9.0          # Face / licence-plate blurring
+opencv-python-headless>=4.9.0 # Face / licence-plate blurring (headless = no GUI libs needed on server)
 
 # --- Data & Optimisation ---
 numpy>=1.26.0
