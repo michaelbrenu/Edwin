@@ -63,21 +63,33 @@ def _step_classify(processed_paths: list[Path], bin_records: list[dict]) -> list
     Step 2 — Run CLIP classifier on each processed image and merge
     classification results into the corresponding bin record.
     """
-    from models.waste_classifier import WasteClassifier
-    clf = WasteClassifier()
     path_map = {p.stem: p for p in processed_paths}
 
-    for record in bin_records:
+    # Only load the model if at least one processed image matches a bin record
+    matchable = [r for r in bin_records if path_map.get(r["bin_id"]) and path_map[r["bin_id"]].exists()]
+    if not matchable:
+        logger.info("[Step 2] No images match bin IDs — keeping pre-assigned labels.")
+        return bin_records
+
+    try:
+        from models.waste_classifier import WasteClassifier
+        clf = WasteClassifier()
+    except Exception as exc:
+        logger.warning("[Step 2] CLIP model could not load (%s) — keeping pre-assigned labels.", exc)
+        return bin_records
+
+    for record in matchable:
         bin_id = record["bin_id"]
-        img_p  = path_map.get(bin_id)
-        if img_p and img_p.exists():
+        img_p  = path_map[bin_id]
+        try:
             result = clf.classify(img_p)
             record["waste_type"]  = result["label"]
             record["confidence"]  = result["confidence"]
             record["uncertain"]   = result.get("uncertain", False)
             record["all_scores"]  = result.get("all_scores", {})
-        else:
-            logger.warning("No processed image found for %s — keeping mock label.", bin_id)
+        except Exception as exc:
+            logger.warning("CLIP classify failed for %s: %s — keeping mock label.", bin_id, exc)
+
     logger.info("[Step 2] Classification complete for %d bins.", len(bin_records))
     return bin_records
 
@@ -229,9 +241,21 @@ def run_pipeline(
 
     # ── Step 2: Classify ──────────────────────────────────────────────────
     if not skip_classifier:
+        # Check upfront how many images can actually be classified
+        from pathlib import Path as _Path
+        proc_map    = {p.stem: p for p in processed_paths}
+        clip_targets = sum(
+            1 for r in bin_records
+            if proc_map.get(r["bin_id"]) and proc_map[r["bin_id"]].exists()
+        )
+        clip_desc = (
+            f"Running CLIP zero-shot classification on {clip_targets} images..."
+            if clip_targets
+            else "No matching images found — using pre-assigned waste labels."
+        )
         emit({
             "type": "step_start", "step": 2, "name": "Waste Classifier",
-            "desc": f"Running CLIP zero-shot classification on {len(processed_paths)} images...",
+            "desc": clip_desc,
         })
         bin_records = _step_classify(processed_paths, bin_records)
         emit({
