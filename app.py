@@ -298,6 +298,12 @@ async def results(request: Request):
     })
 
 
+@app.get("/healthz")
+async def healthz():
+    """Streamlit Cloud health-check endpoint."""
+    return {"status": "ok"}
+
+
 @app.get("/download/{filename}")
 async def download(filename: str):
     path = DIRS["exports"] / filename
