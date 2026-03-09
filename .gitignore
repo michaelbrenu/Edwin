@@ -19,8 +19,12 @@ data/exports/
 data/raw/
 data/processed/
 
-# Models (large binary files)
-models/
+# Models — ignore downloaded weight files but keep Python source
+models/**/*.bin
+models/**/*.pt
+models/**/*.pth
+models/**/*.safetensors
+models/__pycache__/
 
 # Logs
 *.log
