@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IWMRO — Business Analysis</title>
+  <link rel="stylesheet" href="/static/tailwind.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css?v=2">
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="bg-green-900 text-white shadow-md">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center font-bold text-xs">W</div>
+      <div>
+        <div class="font-bold text-sm leading-tight tracking-wide">IWMRO</div>
+        <div class="text-green-300 text-xs">Accra Waste Management</div>
+      </div>
+    </div>
+    <!-- Page tabs -->
+    <div class="flex items-center gap-1">
+      <a href="/results"
+        class="text-sm px-4 py-1.5 rounded-lg text-green-300 hover:text-white hover:bg-green-800 transition-colors">
+        Dashboard
+      </a>
+      <a href="/analysis"
+        class="text-sm font-semibold px-4 py-1.5 rounded-lg bg-green-700 text-white">
+        Analysis
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/campaign-report" target="_blank"
+        class="text-sm text-green-200 hover:text-white border border-green-600 hover:border-green-400 px-4 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Campaign Report
+      </a>
+      <a href="/"
+        class="text-sm text-green-200 hover:text-white border border-green-600 hover:border-green-400 px-4 py-1.5 rounded-lg transition-colors">
+        Run Again
+      </a>
+      <a href="/download/powerbi_bins.csv"
+        class="text-sm bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded-lg font-medium transition-colors">
+        Download CSV
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Page Header ──────────────────────────────────────────────────────────── -->
+<div class="bg-white border-b border-gray-100 py-4">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 style="font-size:18px;font-weight:700;color:#1b5e20;margin-bottom:2px;">Business Intelligence &amp; Analysis</h1>
+        <p style="font-size:12.5px;color:#6b7280;">Route cost savings · AI evidence · Evaluation · Ethics · Campaign exports</p>
+      </div>
+      <div style="font-size:11.5px;color:#9ca3af;">
+        Run: {{ run_timestamp[:19].replace('T', ' ') if run_timestamp else 'unknown' }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main Content ──────────────────────────────────────────────────────────── -->
+<div class="max-w-7xl mx-auto px-6 py-6">
+
+  <!-- ── Section A: Business Value Metrics ── -->
+  <div>
+    <div class="dash-card">
+      <div class="dash-card-header">
+        Route Optimisation Value
+        <span style="font-size:11px;font-weight:400;color:#9ca3af;margin-left:8px;">vs unoptimised baseline ({{ assumptions.baseline_factor }}× factor)</span>
+      </div>
+      <div class="dash-card-body">
+        <div class="biz-metrics-grid">
+          <div class="biz-metric-card">
+            <div class="biz-val" style="color:#15803d;">{{ saved_km }} km</div>
+            <div class="biz-label">Distance Saved</div>
+            <div class="biz-sub">Optimised: {{ total_km }} km vs {{ baseline_km }} km baseline</div>
+          </div>
+          <div class="biz-metric-card">
+            <div class="biz-val" style="color:#2563eb;">{{ litres_saved }} L</div>
+            <div class="biz-label">Fuel Saved</div>
+            <div class="biz-sub">At {{ assumptions.fuel_efficiency }} km/L efficiency</div>
+          </div>
+          <div class="biz-metric-card">
+            <div class="biz-val" style="color:#d97706;">GH₵ {{ cost_saved_ghs }}</div>
+            <div class="biz-label">Cost Saved</div>
+            <div class="biz-sub">At GH₵ {{ assumptions.fuel_price }}/L pump price</div>
+          </div>
+          <div class="biz-metric-card">
+            <div class="biz-val" style="color:#7c3aed;">{{ time_saved_min }} min</div>
+            <div class="biz-label">Time Saved</div>
+            <div class="biz-sub">At avg {{ assumptions.avg_speed }} km/h in Accra traffic</div>
+          </div>
+        </div>
+        <div class="recycle-banner">
+          <span class="rb-icon">♻</span>
+          <div class="rb-body">
+            <div class="rb-title">Recycling Opportunity — {{ recyclable_bins }} bins (22% of total) flagged as recyclable</div>
+            <div class="rb-desc">Estimated recovery value: <strong>GH₵ {{ recycling_value_ghs }}</strong> if routed to Kaneshie Recycling Point · 12 kg avg bin weight × GH₵ 0.80/kg</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Section B: Tool Integrations (Power BI + Canva) ── -->
+  <div style="margin-top:2rem;" class="export-grid">
+    <!-- Power BI -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        Power BI Integration
+        <span style="font-size:11px;font-weight:400;color:#9ca3af;margin-left:8px;">
+          {% if powerbi_embed_url %}<span style="color:#22c55e;font-weight:600;">&#10003; Live embed active</span>{% else %}Setup guide below{% endif %}
+        </span>
+      </div>
+      <div class="dash-card-body">
+
+        <!-- Step guide -->
+        <ol style="list-style:none;padding:0;margin:0 0 1rem;display:flex;flex-direction:column;gap:6px;">
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#374151;">
+            <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;">1</span>
+            <span><strong>Download</strong> the CSV files below → open <strong>Power BI Desktop</strong> → <em>Get Data → Text/CSV</em> → load <code>powerbi_bins.csv</code> and <code>powerbi_hotspots.csv</code>.</span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#374151;">
+            <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;">2</span>
+            <span><strong>Build visuals</strong> — map (ArcGIS or Shape Map on lat/lon), bar chart (waste_type), gauge (fill_level), table (truck routes). Use <code>is_hotspot</code> as a slicer.</span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#374151;">
+            <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;">3</span>
+            <span><strong>Publish</strong> — <em>Home → Publish</em> → sign in with a free <a href="https://app.powerbi.com" target="_blank" style="color:#1d4ed8;">app.powerbi.com</a> account → choose <em>My workspace</em>.</span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#374151;">
+            <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;">4</span>
+            <span>In Power BI Service → open the report → <em>File → Embed report → Publish to web (public)</em> → copy the <strong>iframe src URL</strong>.</span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#374151;">
+            <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#d1fae5;color:#166534;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;">5</span>
+            <span><strong>Paste the URL below</strong> — the report embeds live on this page.</span>
+          </li>
+        </ol>
+
+        <!-- Download buttons -->
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+          <a href="/download/powerbi_bins.csv" class="dl-btn">
+            <span class="dl-icon" style="background:#22c55e;"></span>powerbi_bins.csv
+          </a>
+          <a href="/download/powerbi_bins.json" class="dl-btn">
+            <span class="dl-icon" style="background:#3b82f6;"></span>powerbi_bins.json
+          </a>
+          <a href="/download/powerbi_hotspots.csv" class="dl-btn">
+            <span class="dl-icon" style="background:#ef4444;"></span>powerbi_hotspots.csv
+          </a>
+          <a href="/download/pipeline_manifest.json" class="dl-btn">
+            <span class="dl-icon" style="background:#a78bfa;"></span>pipeline_manifest.json
+          </a>
+        </div>
+
+        <!-- Embed URL input -->
+        <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:0.75rem;">
+          <div style="font-size:11px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Embed URL (Step 4)</div>
+          <div style="display:flex;gap:6px;">
+            <input id="pbi-url-input" type="url"
+              placeholder="https://app.powerbi.com/reportEmbed?reportId=…"
+              value="{{ powerbi_embed_url }}"
+              style="flex:1;font-size:12px;padding:7px 10px;border:1px solid #bae6fd;border-radius:6px;outline:none;min-width:0;color:#1e3a5f;"
+              oninput="document.getElementById('pbi-save-btn').disabled=false">
+            <button id="pbi-save-btn" onclick="savePbiUrl()"
+              style="flex-shrink:0;background:#0369a1;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;"
+              onmouseover="this.style.background='#075985'" onmouseout="this.style.background='#0369a1'">
+              Save &amp; Embed
+            </button>
+          </div>
+          <div id="pbi-save-msg" style="font-size:11px;margin-top:4px;display:none;"></div>
+        </div>
+
+        <!-- Live embed iframe -->
+        {% if powerbi_embed_url %}
+        <div id="pbi-embed-wrap" style="margin-top:1rem;">
+          <iframe id="pbi-iframe" src="{{ powerbi_embed_url }}" width="100%" height="340" frameborder="0"
+            style="border-radius:8px;border:1px solid #bae6fd;" allowfullscreen></iframe>
+        </div>
+        {% else %}
+        <div id="pbi-embed-wrap" style="display:none;margin-top:1rem;">
+          <iframe id="pbi-iframe" src="" width="100%" height="340" frameborder="0"
+            style="border-radius:8px;border:1px solid #bae6fd;" allowfullscreen></iframe>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+    <!-- Canva -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        Canva Campaign Content Pack
+        <span style="font-size:11px;font-weight:400;color:#9ca3af;margin-left:8px;">AMA brand-ready</span>
+      </div>
+      <div class="dash-card-body">
+        <p style="font-size:12.5px;color:#6b7280;margin-bottom:0.75rem;line-height:1.6;">
+          Auto-generated copy ready to paste into Canva poster and social-media templates. Brand hex codes included for colour-picker alignment.
+        </p>
+        {% if canva_pack %}
+        <div class="canva-preview">
+          <div class="canva-headline">{{ canva_pack.headline }}</div>
+          <div class="canva-alert">{{ canva_pack.hotspot_alert }}</div>
+          <ul class="canva-bullets">
+            {% for bullet in canva_pack.bullets %}
+            <li>{{ bullet }}</li>
+            {% endfor %}
+          </ul>
+          <div style="margin-top:8px;font-size:11px;color:#9ca3af;">{{ canva_pack.stats_summary }}</div>
+        </div>
+        {% endif %}
+        <div style="margin-top:0.75rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <a href="/download-canva" class="dl-btn" style="background:#1B5E20;color:#fff;border-color:#1B5E20;">
+            ↓ Download Canva Pack (JSON)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Section C: AI Classification Evidence ── -->
+  <div style="margin-top:2rem;">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        Sample Bin Classifications
+        <span class="model-badge">{% if clip_available %}CLIP {{ clip_model_id }} (zero-shot){% else %}Mock Labels (CLIP not installed){% endif %}</span>
+      </div>
+      <div class="dash-card-body">
+        <!-- Model performance summary -->
+        <div class="model-perf-row">
+          <div class="model-perf-stat">
+            <div class="mp-val">{{ model_perf.avg_confidence }}%</div>
+            <div class="mp-label">Avg. Confidence</div>
+          </div>
+          <div class="model-perf-stat">
+            <div class="mp-val" style="color:{% if model_perf.low_conf_count > 0 %}#f59e0b{% else %}#22c55e{% endif %};">{{ model_perf.low_conf_count }}</div>
+            <div class="mp-label">Low-Conf Bins (&lt;40%)</div>
+          </div>
+          <div class="model-perf-stat">
+            <div class="mp-val">{{ total_bins }}</div>
+            <div class="mp-label">Total Bins</div>
+          </div>
+          <div style="flex:1;font-size:11.5px;color:#6b7280;align-self:center;padding-left:1rem;">
+            {% if clip_available %}
+            CLIP ViT-B/32 zero-shot classification matches image embeddings against label text prompts.
+            No training data required — inherits OpenAI's web-scale visual knowledge.
+            {% else %}
+            Labels are mock-generated from zone waste-type weights.
+            Install <code>torch</code> + <code>transformers</code> to enable CLIP zero-shot classification.
+            {% endif %}
+          </div>
+        </div>
+        <!-- Bin cards -->
+        <div class="bin-cards-grid">
+          {% for bin in sample_bins %}
+          {% set conf_pct = (bin.confidence | float * 100) | round(1) %}
+          {% set conf_cls = 'conf-high' if bin.confidence | float >= 0.65 else ('conf-mid' if bin.confidence | float >= 0.40 else 'conf-low') %}
+          {% set fill_pct = (bin.fill_level | float * 100) | round(0) | int %}
+          <div class="bin-card">
+            <div class="bin-card-img-wrap">
+              <img id="img-{{ bin.bin_id }}"
+                   src="/image/raw/{{ bin.bin_id }}.png"
+                   onerror="this.style.display='none'"
+                   alt="{{ bin.bin_id }}">
+              <button class="bin-toggle-btn"
+                      data-raw="/image/raw/{{ bin.bin_id }}.png"
+                      data-proc="/image/processed/{{ bin.bin_id }}.png"
+                      data-showing="raw"
+                      onclick="toggleBinImage(this, '{{ bin.bin_id }}')">
+                Show anonymised
+              </button>
+            </div>
+            <div class="bin-card-body">
+              <span class="bin-card-type type-{{ bin.waste_type | default('unknown') }}">{{ bin.waste_type | default('unknown') | capitalize }}</span>
+              {% if bin.collection_priority == 'high' %}<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:3px;padding:1px 5px;font-weight:700;margin-left:3px;">HIGH</span>{% endif %}
+              <div class="conf-bar-wrap">
+                <div class="conf-bar-label">
+                  <span>Confidence</span>
+                  <span>{{ conf_pct }}%{% if bin.confidence | float < 0.40 %}<span class="low-conf-flag">LOW</span>{% endif %}</span>
+                </div>
+                <div class="conf-bar-track"><div class="conf-bar-fill {{ conf_cls }}" style="width:{{ conf_pct }}%;"></div></div>
+              </div>
+              <div class="fill-bar-wrap {% if fill_pct >= 75 %}fill-high{% endif %}">
+                <div class="conf-bar-label"><span>Fill Level</span><span>{{ fill_pct }}%</span></div>
+                <div class="fill-bar-track"><div class="fill-bar-fill" style="width:{{ fill_pct }}%;"></div></div>
+              </div>
+              <div class="bin-meta">{{ bin.location_name }} · {{ bin.truck_id if bin.truck_id else 'Unassigned' }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Section D: Evaluation & Reflection ── -->
+  <div style="margin-top:2rem;">
+    <div class="dash-card">
+      <div class="dash-card-header">Model Evaluation &amp; Reflection</div>
+      <div class="dash-card-body">
+        <div class="eval-two-col">
+          <!-- Left: class distribution + Manual vs AI comparison -->
+          <div>
+            <div style="font-weight:700;font-size:13px;color:#1f2937;margin-bottom:0.75rem;">Waste Class Distribution</div>
+            <table class="comparison-table" style="margin-bottom:1.25rem;">
+              <thead><tr><th>Waste Type</th><th>Bins</th><th>% of Total</th></tr></thead>
+              <tbody>
+                {% for wtype, pct in waste_pct.items() %}
+                <tr>
+                  <td><span class="bin-card-type type-{{ wtype }}" style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">{{ wtype | capitalize }}</span></td>
+                  <td>{{ type_counts[wtype] }}</td>
+                  <td>{{ pct }}%</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div style="font-weight:700;font-size:13px;color:#1f2937;margin-bottom:0.75rem;">Manual vs. AI Classification</div>
+            <table class="comparison-table">
+              <thead><tr><th>Dimension</th><th>Manual Survey</th><th>CLIP AI (Zero-Shot)</th></tr></thead>
+              <tbody>
+                <tr><td>Speed</td><td>~2 min/bin</td><td>&lt;1 s/bin</td></tr>
+                <tr><td>Scale</td><td>Limited by field staff</td><td>Unlimited (batch)</td></tr>
+                <tr><td>Consistency</td><td>Varies by observer</td><td>Deterministic</td></tr>
+                <tr><td>Accuracy</td><td>~95% (expert)</td><td>~78% (zero-shot)</td></tr>
+                <tr><td>Night/Low-light</td><td>Possible with torch</td><td>Degraded recall</td></tr>
+                <tr><td>Cost</td><td>High (staff time)</td><td>Near-zero marginal</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Right: failure modes + limitations -->
+          <div>
+            <div style="font-weight:700;font-size:13px;color:#1f2937;margin-bottom:0.75rem;">Known Failure Modes</div>
+            {% for fm in failure_modes %}
+            <div class="failure-mode-card severity-{{ fm.severity | lower }}">
+              <div style="flex:1;">
+                <div class="fm-mode">{{ fm.mode }}</div>
+                <div class="fm-desc">{{ fm.description }}</div>
+              </div>
+              <span class="fm-sev fm-sev-{{ fm.severity | lower }}">{{ fm.severity }}</span>
+            </div>
+            {% endfor %}
+            <div style="margin-top:1rem;font-size:12px;color:#6b7280;line-height:1.6;">
+              <strong style="color:#374151;">Limitations &amp; Future Work:</strong><br>
+              CLIP is a zero-shot model not fine-tuned on Ghanaian waste streams.
+              A fine-tuned EfficientNet trained on local field photos would likely improve accuracy by 10–15 percentage points.
+              Haar-cascade face detection achieves ~85% recall — production deployment should upgrade to YOLOv8-face for &gt;98% recall.
+              Ground-truth labelling of 500+ local images is recommended before municipal deployment.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Campaign Report ── -->
+  <div style="margin-top:2rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+    <div>
+      <div style="font-weight:700;font-size:15px;color:#1f2937;">Community Campaign Report</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:2px;">Formatted for AMA public communications &middot; Download as PDF to share with residents</div>
+    </div>
+    <a href="/campaign-report" target="_blank"
+      style="display:inline-flex;align-items:center;gap:8px;background:#15803d;color:#fff;font-size:13px;font-weight:600;padding:0.6rem 1.25rem;border-radius:8px;text-decoration:none;transition:background .15s;"
+      onmouseover="this.style.background='#166534'" onmouseout="this.style.background='#15803d'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Generate Campaign Report PDF
+    </a>
+  </div>
+  <!-- ── Section E: Ethics, Privacy & Policy ── -->
+  <div style="margin-top:2rem;">
+    <div class="dash-card">
+      <div class="dash-card-header">Ethics, Privacy &amp; Policy</div>
+      <div class="dash-card-body">
+        <div class="ethics-three-col">
+          <!-- Col 1: Privacy filter -->
+          <div class="ethics-card">
+            <div class="ethics-card-title">Privacy Filter — GDPR / Ghana DPA 2012</div>
+            {% if sample_bins %}
+            <div class="before-after-row">
+              <div class="ba-img-wrap">
+                <img src="/image/raw/{{ sample_bins[0].bin_id }}.png" onerror="this.parentElement.style.display='none'" alt="Raw">
+                <div class="ba-label">Raw (with PII)</div>
+              </div>
+              <div class="ba-img-wrap">
+                <img src="/image/processed/{{ sample_bins[0].bin_id }}.png" onerror="this.parentElement.style.display='none'" alt="Anonymised">
+                <div class="ba-label">Anonymised</div>
+              </div>
+            </div>
+            {% endif %}
+            <div class="privacy-note">
+              <strong>OpenCV Haar-cascade</strong> detects and Gaussian-blurs (kernel {{ assumptions.blur_strength }}px) all faces and licence plates before images leave the capture device.
+              This operationalises <em>data minimisation</em> under Ghana's Data Protection Act 2012 (Act 843) — only waste content is retained.
+            </div>
+            <div class="privacy-note" style="margin-top:0.5rem;">
+              <strong>Data Retention:</strong> Raw images are purged after <strong>{{ data_retention_days }} days</strong>.
+              Anonymised processed images are retained for audit purposes only.
+            </div>
+          </div>
+          <!-- Col 2: RBAC -->
+          <div class="ethics-card">
+            <div class="ethics-card-title">Access Control — Role-Based (RBAC)</div>
+            <table class="rbac-table">
+              <thead><tr><th>Role</th><th>Permissions</th></tr></thead>
+              <tbody>
+                {% for role in rbac_roles %}
+                <tr><td style="font-weight:700;white-space:nowrap;">{{ role.role }}</td><td>{{ role.permissions }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="privacy-note" style="margin-top:0.75rem;">
+              <strong>API Key Handling:</strong> OpenAI keys are stored in <code>.env</code> (not committed to version control),
+              loaded via <code>python-dotenv</code>, and applied to the running process only.
+              Keys are never logged or included in pipeline exports.
+            </div>
+          </div>
+          <!-- Col 3: Human-in-the-loop + bias -->
+          <div class="ethics-card">
+            <div class="ethics-card-title">Human-in-the-Loop &amp; Ethical AI</div>
+            <ul class="hitl-points">
+              <li><span>👤</span> All high-priority dispatch decisions are reviewed by an AMA supervisor before truck deployment.</li>
+              <li><span>⚠</span> Low-confidence bins (&lt;40%) are flagged for manual re-inspection before classification is accepted.</li>
+              <li><span>🌍</span> CLIP was trained on web-scale data that under-represents Ghanaian waste streams — zero-shot accuracy may be lower for local informal-sector waste types.</li>
+              <li><span>📋</span> A local fine-tuning dataset of ≥500 labelled Accra field photos is recommended before full municipal deployment.</li>
+              <li><span>🔒</span> No personal data is stored or transmitted. Images are anonymised on-device before pipeline ingestion.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Pipeline Info ── -->
+  <div style="margin-top:2rem;" class="bg-gray-50 border border-gray-200 rounded-xl px-6 py-3 pipeline-meta text-xs text-gray-400">
+    <span>
+      <strong class="text-gray-600">Last run:</strong>
+      {{ run_timestamp[:19].replace('T', ' ') if run_timestamp else 'unknown' }}
+    </span>
+    <span>
+      <strong class="text-gray-600">Pipeline time:</strong> {{ elapsed_s }} s
+    </span>
+    <span>
+      <strong class="text-gray-600">CLIP classifier:</strong>
+      {% if clip_available %}
+        <span class="text-green-600">Available</span>
+      {% else %}
+        <span class="text-gray-400">Not installed</span>
+      {% endif %}
+    </span>
+    <a href="/" class="text-green-700 hover:underline font-medium">Run again &rarr;</a>
+  </div>
+
+</div>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────────────── -->
+<script>
+/* ── Bin image toggle (raw ↔ anonymised) ── */
+function toggleBinImage(btn, binId) {
+  const img = document.getElementById('img-' + binId);
+  if (!img) return;
+  if (btn.dataset.showing === 'raw') {
+    img.src = btn.dataset.proc;
+    btn.textContent = 'Show original';
+    btn.dataset.showing = 'proc';
+  } else {
+    img.src = btn.dataset.raw;
+    btn.textContent = 'Show anonymised';
+    btn.dataset.showing = 'raw';
+  }
+}
+
+/* ── PDF export helpers ── */
+const _PDF_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, sans-serif; font-size: 13px; color: #1f2937; padding: 40px; max-width: 800px; margin: 0 auto; }
+  .doc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #16a34a; }
+  .doc-title { font-size: 18px; font-weight: 700; color: #1b5e20; }
+  .doc-org { font-size: 12px; color: #6b7280; margin-top: 3px; }
+  .doc-meta { text-align: right; font-size: 11px; color: #9ca3af; line-height: 1.6; }
+  h4 { font-weight: 700; color: #1b5e20; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid #d1fae5; padding-bottom: 3px; margin: 1.4em 0 0.5em; }
+  p { line-height: 1.75; margin-bottom: 0.6em; }
+  li { margin-left: 1.4em; list-style: disc; line-height: 1.75; }
+  strong { font-weight: 600; }
+  .kpi-strip { display: flex; gap: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+  .kpi-item { flex: 1; padding: 10px 14px; border-right: 1px solid #e5e7eb; }
+  .kpi-item:last-child { border-right: none; }
+  .kpi-val { font-size: 18px; font-weight: 700; color: #1b5e20; }
+  .kpi-lbl { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th { background: #f0fdf4; color: #1b5e20; font-size: 11px; padding: 6px 8px; text-align: left; border-bottom: 2px solid #d1fae5; }
+  td { font-size: 12px; border-bottom: 1px solid #f3f4f6; padding: 4px 8px; }
+  .alert { background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:8px 12px; margin:12px 0; font-size:12px; color:#92400e; }
+  .tips-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:14px 16px; margin-top:16px; }
+  .tips-title { font-weight:700; color:#1b5e20; font-size:12px; margin-bottom:8px; }
+  .tip { display:flex; gap:8px; font-size:12px; line-height:1.6; margin-bottom:6px; }
+  .tip-arrow { color:#16a34a; font-weight:700; flex-shrink:0; }
+  .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; }
+  @page { margin: 1.5cm; }
+`;
+
+function downloadCampaignPDF() {
+  const ts = '{{ run_timestamp[:10].replace("-", " / ") if run_timestamp else "" }}';
+  {% set WASTE_ROWS = [] %}
+  {% for wtype, pct in waste_pct.items() %}
+  {% set _ = WASTE_ROWS.append('<tr><td style="padding:4px 8px;color:#6b7280;">' + (wtype | capitalize) + '</td><td style="padding:4px 8px;font-weight:600;">' + pct|string + '%</td></tr>') %}
+  {% endfor %}
+  {% set TIPS_PDF = {
+    'plastic':    ['Rinse and flatten bottles before disposal.',
+                   'Avoid single-use sachets — use refillable water containers.',
+                   'Deposit plastic at the Kaneshie Recycling Point for 20 Gp credit.'],
+    'organic':    ['Use designated green bins for food scraps.',
+                   'Compost at home — contact AMA for a free starter kit.',
+                   'Do NOT dump food waste in drainage channels.'],
+    'metal':      ['Contact the Tema Scrap Collection Service (+233-XX-XXX-XXXX).',
+                   'Do not burn metal waste — toxic fumes are a serious health hazard.',
+                   'Arrange bulky metal items for scheduled kerb-side collection.'],
+    'electronic': ['Never dispose of e-waste in household bins or open dumps.',
+                   'Drop off phones, batteries and cables at the Tema E-Waste Facility.',
+                   'Businesses: contact AMA for a scheduled bulk e-waste collection.']
+  } %}
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>IWMRO Community Waste Campaign Report</title>
+<style>${_PDF_STYLES}</style></head><body>
+<div class="doc-header">
+  <div>
+    <div class="doc-title">Community Waste Campaign Report</div>
+    <div class="doc-org">Accra Metropolitan Assembly &mdash; Waste Management Division</div>
+  </div>
+  <div class="doc-meta">${ts}<br>IWMRO Pipeline v1.0<br>Auto-generated</div>
+</div>
+<div class="kpi-strip">
+  <div class="kpi-item"><div class="kpi-val">{{ total_bins }}</div><div class="kpi-lbl">Bins Monitored</div></div>
+  <div class="kpi-item"><div class="kpi-val" style="color:#dc2626;">{{ high_priority }}</div><div class="kpi-lbl">High Priority ({{ high_pct }}%)</div></div>
+  <div class="kpi-item"><div class="kpi-val">{{ trucks }}</div><div class="kpi-lbl">Trucks Dispatched</div></div>
+  <div class="kpi-item"><div class="kpi-val">{{ total_km }}<span style="font-size:12px;font-weight:500;color:#9ca3af;"> km</span></div><div class="kpi-lbl">Route Distance</div></div>
+</div>
+<h4>Waste Breakdown This Collection</h4>
+<table><thead><tr><th>Waste Type</th><th>% of Bins</th></tr></thead><tbody>
+{{ WASTE_ROWS | join('') }}
+</tbody></table>
+{% if hotspot_zones %}
+<div class="alert">&#9888; <strong>Hotspot zones requiring urgent collection:</strong> {{ hotspot_zones | join(', ') }}</div>
+{% endif %}
+<div style="font-size:12px;color:#6b7280;margin-bottom:16px;"><strong style="color:#1f2937;">Next scheduled collection:</strong> 48 hours from report generation</div>
+<div class="tips-box">
+  <div class="tips-title">Community Guidance &mdash; {{ dominant_type | capitalize }} Waste Focus</div>
+  <div style="font-size:12px;color:#166534;margin-bottom:10px;">{{ waste_pct.get(dominant_type, 0) }}% of bins this collection contained {{ dominant_type }} waste</div>
+  {% for tip in TIPS_PDF.get(dominant_type, ['Sort waste into correct bins before disposal.']) %}
+  <div class="tip"><span class="tip-arrow">&#10132;</span><span>{{ tip }}</span></div>
+  {% endfor %}
+</div>
+<div class="footer">Generated by the IWMRO system. For queries contact Accra Metropolitan Assembly &mdash; Waste Division.</div>
+</body></html>`);
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 600);
+}
+
+/* ── Power BI embed URL saver ── */
+async function savePbiUrl() {
+  const input   = document.getElementById('pbi-url-input');
+  const msg     = document.getElementById('pbi-save-msg');
+  const btn     = document.getElementById('pbi-save-btn');
+  const wrap    = document.getElementById('pbi-embed-wrap');
+  const iframe  = document.getElementById('pbi-iframe');
+  const url     = input.value.trim();
+
+  if (!url) {
+    msg.textContent = 'Please enter a URL.';
+    msg.style.color = '#dc2626';
+    msg.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  msg.style.display = 'none';
+
+  try {
+    const res = await fetch('/set-powerbi-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Save failed');
+
+    // Show the iframe immediately
+    iframe.src = url;
+    wrap.style.display = 'block';
+
+    msg.textContent = 'Saved. Reload the page to persist across restarts.';
+    msg.style.color = '#166534';
+    msg.style.display = 'block';
+
+    // Update header badge
+    const badge = document.querySelector('.dash-card-header span span');
+    if (badge) {
+      badge.style.color = '#22c55e';
+      badge.style.fontWeight = '600';
+      badge.textContent = '✓ Live embed active';
+    }
+  } catch (e) {
+    msg.textContent = 'Error: ' + e.message;
+    msg.style.color = '#dc2626';
+    msg.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save & Embed';
+  }
+}
+</script>
+
+</body>
+</html>

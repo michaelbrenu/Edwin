@@ -211,7 +211,8 @@ body {
   animation: spin .8s linear infinite;
   margin-bottom: 24px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin  { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.4);} }
 
 .pipeline-step-list {
   list-style: none;
@@ -932,4 +933,345 @@ body {
   .campaign-body { flex-direction: column; }
   .campaign-left { border-right: none; border-bottom: 1px solid #f3f4f6; }
   .campaign-right { width: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NEW CAPSTONE SECTIONS
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Business Value Metrics grid ── */
+.biz-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.biz-metric-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+.biz-metric-card .biz-val {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.biz-metric-card .biz-label {
+  font-size: 11.5px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+.biz-metric-card .biz-sub {
+  font-size: 10.5px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+.recycle-banner {
+  background: linear-gradient(90deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 0.9rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.recycle-banner .rb-icon { font-size: 1.6rem; }
+.recycle-banner .rb-body { flex: 1; min-width: 180px; }
+.recycle-banner .rb-title { font-weight: 700; color: #14532d; font-size: 14px; }
+.recycle-banner .rb-desc  { font-size: 12.5px; color: #166534; margin-top: 2px; }
+
+/* ── Export cards (Power BI + Canva side-by-side) ── */
+.export-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.dl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  color: #374151;
+  transition: background .15s, border-color .15s;
+}
+.dl-btn:hover { background: #f9fafb; border-color: #d1d5db; color: #111827; }
+.dl-icon {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.canva-preview {
+  background: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.canva-headline {
+  font-weight: 700;
+  color: #1B5E20;
+  font-size: 13.5px;
+  margin-bottom: 4px;
+}
+.canva-alert { color: #dc2626; font-weight: 600; margin-bottom: 6px; }
+.canva-bullets { padding-left: 1.1em; color: #374151; }
+.canva-bullets li { margin-bottom: 3px; }
+
+/* ── Bin classification evidence cards ── */
+.bin-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.bin-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.bin-card-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+.bin-card-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.bin-toggle-btn {
+  position: absolute;
+  bottom: 5px; right: 5px;
+  font-size: 10px;
+  padding: 2px 7px;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.bin-card-body { padding: 0.6rem 0.75rem; }
+.bin-card-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  margin-bottom: 5px;
+}
+.type-plastic    { background: #dbeafe; color: #1e40af; }
+.type-organic    { background: #dcfce7; color: #166534; }
+.type-metal      { background: #f3f4f6; color: #374151; }
+.type-electronic { background: #ede9fe; color: #5b21b6; }
+.type-unknown    { background: #fef3c7; color: #92400e; }
+.conf-bar-wrap { margin: 5px 0 3px; }
+.conf-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+.conf-bar-track {
+  height: 5px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.conf-bar-fill { height: 100%; border-radius: 3px; }
+.conf-high  { background: #22c55e; }
+.conf-mid   { background: #f59e0b; }
+.conf-low   { background: #ef4444; }
+.low-conf-flag {
+  font-size: 10px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  font-weight: 700;
+}
+.fill-bar-wrap { margin: 4px 0 5px; }
+.fill-bar-track {
+  height: 5px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.fill-bar-fill { height: 100%; border-radius: 3px; background: #f59e0b; }
+.fill-high .fill-bar-fill { background: #ef4444; }
+.bin-meta { font-size: 10.5px; color: #9ca3af; }
+
+/* ── Model perf summary row ── */
+.model-perf-row {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.model-perf-stat { text-align: center; min-width: 80px; }
+.model-perf-stat .mp-val {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1B5E20;
+}
+.model-perf-stat .mp-label { font-size: 10.5px; color: #6b7280; }
+.model-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  background: #ede9fe;
+  color: #5b21b6;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* ── Evaluation & Reflection ── */
+.eval-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+.failure-mode-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+.severity-high   { border-left: 3px solid #ef4444; }
+.severity-medium { border-left: 3px solid #f59e0b; }
+.severity-low    { border-left: 3px solid #22c55e; }
+.fm-mode { font-weight: 700; font-size: 12.5px; color: #1f2937; }
+.fm-desc { font-size: 11.5px; color: #6b7280; margin-top: 2px; }
+.fm-sev  { font-size: 10px; font-weight: 700; border-radius: 3px; padding: 1px 6px; flex-shrink: 0; margin-top: 2px; }
+.fm-sev-high   { background: #fef2f2; color: #dc2626; }
+.fm-sev-medium { background: #fff7ed; color: #c2410c; }
+.fm-sev-low    { background: #f0fdf4; color: #15803d; }
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.comparison-table th {
+  background: #f9fafb;
+  padding: 7px 10px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 11.5px;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+.comparison-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+/* ── Ethics, Privacy & Policy ── */
+.ethics-three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+.ethics-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+.ethics-card-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1f2937;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+.rbac-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  margin-top: 0.5rem;
+}
+.rbac-table th {
+  background: #f9fafb;
+  padding: 5px 8px;
+  text-align: left;
+  font-size: 11px;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+.rbac-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  vertical-align: top;
+}
+.before-after-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 0.5rem;
+}
+.ba-img-wrap { text-align: center; }
+.ba-img-wrap img {
+  width: 100%;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #e5e7eb;
+}
+.ba-label { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+.privacy-note {
+  font-size: 11.5px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+}
+.hitl-points { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.hitl-points li {
+  font-size: 11.5px;
+  color: #374151;
+  padding: 4px 0;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.hitl-points li:last-child { border-bottom: none; }
+
+/* ── Responsive collapses ── */
+@media (max-width: 900px) {
+  .biz-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .export-grid      { grid-template-columns: 1fr; }
+  .bin-cards-grid   { grid-template-columns: repeat(2, 1fr); }
+  .eval-two-col     { grid-template-columns: 1fr; }
+  .ethics-three-col { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .biz-metrics-grid { grid-template-columns: 1fr; }
+  .bin-cards-grid   { grid-template-columns: 1fr; }
 }

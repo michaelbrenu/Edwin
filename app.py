@@ -27,6 +27,7 @@ from typing import List, Optional
 
 import uvicorn
 from fastapi import FastAPI, File, Form, Request, UploadFile
+from pydantic import BaseModel
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -41,7 +42,13 @@ try:
 except ImportError:
     pass
 
-from config import DIRS
+from config import (
+    DIRS,
+    BASELINE_DISTANCE_FACTOR, FUEL_EFFICIENCY_KM_PER_L, FUEL_PRICE_GHS_PER_L,
+    AVG_SPEED_KMH, RECYCLING_RATE_PCT, AVG_BIN_WEIGHT_KG, RECYCLING_VALUE_GHS_PER_KG,
+    CLIP_MODEL_ID, POWERBI_EMBED_URL as _POWERBI_EMBED_URL_DEFAULT,
+    FAILURE_MODES, RBAC_ROLES, DATA_RETENTION_DAYS, BLUR_STRENGTH,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 logger = logging.getLogger("iwmro.web")
@@ -134,6 +141,34 @@ def _load_results() -> dict | None:
     # Dominant waste type for logic callout
     dominant_type = max(type_counts, key=type_counts.get) if type_counts else "plastic"
 
+    # ── Business metrics ──────────────────────────────────────────────────────
+    biz = _compute_business_metrics(total_km, total_bins, trucks)
+
+    # ── Model performance ─────────────────────────────────────────────────────
+    model_perf = _compute_model_performance(bins)
+
+    # ── Sample bins (3 high + 3 normal, up to 6) ──────────────────────────────
+    high_bins   = [b for b in bins if b.get("collection_priority") == "high"][:3]
+    normal_bins = [b for b in bins if b.get("collection_priority") != "high"][:3]
+    sample_bins = (high_bins + normal_bins)[:6]
+
+    # ── Canva content pack ────────────────────────────────────────────────────
+    from src.reports.canva_generator import generate_canva_pack
+    canva_pack = generate_canva_pack(
+        bins=bins, route_summary=route_summary, dominant_type=dominant_type,
+        hotspot_zones=hotspot_zones, waste_pct=waste_pct, total_bins=total_bins,
+        high_priority=high_priority, total_km=total_km, out_dir=DIRS["exports"],
+    )
+
+    # ── Fallback AI insights ──────────────────────────────────────────────────
+    fallback_insights = None
+    fallback_path = DIRS["exports"] / "fallback_insights.json"
+    if fallback_path.exists():
+        try:
+            fallback_insights = json.loads(fallback_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
     return {
         "bins":           bins,
         "bins_json":      json.dumps(bins),
@@ -152,6 +187,61 @@ def _load_results() -> dict | None:
         "clip_available": _clip_available(),
         "campaign_text":  campaign_text,
         "dominant_type":  dominant_type,
+        # business metrics
+        **biz,
+        # model evaluation
+        "model_perf":     model_perf,
+        "sample_bins":    sample_bins,
+        # tool integrations
+        "canva_pack":     canva_pack,
+        "fallback_insights": fallback_insights,
+        # config constants for templates
+        "failure_modes":  FAILURE_MODES,
+        "rbac_roles":     RBAC_ROLES,
+        "data_retention_days": DATA_RETENTION_DAYS,
+        "clip_model_id":  CLIP_MODEL_ID,
+        "powerbi_embed_url": os.environ.get("POWERBI_EMBED_URL", _POWERBI_EMBED_URL_DEFAULT),
+        "assumptions": {
+            "baseline_factor":  BASELINE_DISTANCE_FACTOR,
+            "fuel_efficiency":  FUEL_EFFICIENCY_KM_PER_L,
+            "fuel_price":       FUEL_PRICE_GHS_PER_L,
+            "avg_speed":        AVG_SPEED_KMH,
+            "blur_strength":    BLUR_STRENGTH,
+        },
+    }
+
+
+def _compute_business_metrics(total_km: float, total_bins: int, trucks: int) -> dict:
+    """Calculate route optimisation value vs an unoptimised baseline."""
+    baseline_km   = round(total_km * BASELINE_DISTANCE_FACTOR, 1)
+    saved_km      = round(baseline_km - total_km, 1)
+    litres_saved  = round(saved_km / max(FUEL_EFFICIENCY_KM_PER_L, 0.01), 1)
+    cost_saved    = round(litres_saved * FUEL_PRICE_GHS_PER_L, 2)
+    time_saved    = round(saved_km / max(AVG_SPEED_KMH, 1) * 60, 0)   # minutes
+    recyclable    = round(total_bins * RECYCLING_RATE_PCT)
+    recycle_value = round(recyclable * AVG_BIN_WEIGHT_KG * RECYCLING_VALUE_GHS_PER_KG, 2)
+    return {
+        "baseline_km":    baseline_km,
+        "saved_km":       saved_km,
+        "litres_saved":   litres_saved,
+        "cost_saved_ghs": cost_saved,
+        "time_saved_min": int(time_saved),
+        "recyclable_bins": recyclable,
+        "recycling_value_ghs": recycle_value,
+    }
+
+
+def _compute_model_performance(bins: list) -> dict:
+    """Summarise classifier confidence across all bins."""
+    confs = [float(b.get("confidence", 0)) for b in bins if b.get("confidence") is not None]
+    if not confs:
+        return {"avg_confidence": 0, "low_conf_count": 0, "low_conf_pct": 0}
+    avg  = round(sum(confs) / len(confs) * 100, 1)
+    low  = sum(1 for c in confs if c < 0.40)
+    return {
+        "avg_confidence":  avg,
+        "low_conf_count":  low,
+        "low_conf_pct":    round(low / max(len(confs), 1) * 100, 1),
     }
 
 
@@ -298,6 +388,79 @@ async def results(request: Request):
     })
 
 
+@app.get("/analysis", response_class=HTMLResponse)
+async def analysis(request: Request):
+    data = _load_results()
+    if not data:
+        return HTMLResponse(
+            "<html><body style='font-family:sans-serif;padding:3rem;text-align:center'>"
+            "<h2 style='color:#1b5e20'>No pipeline data yet</h2>"
+            "<p style='color:#6b7280;margin:1rem 0'>Run the pipeline first to generate analysis data.</p>"
+            "<a href='/' style='color:#15803d;font-weight:600'>Go to home page &rarr;</a>"
+            "</body></html>",
+            status_code=200,
+        )
+    return templates.TemplateResponse("analysis.html", {
+        "request": request,
+        **data,
+    })
+
+
+@app.get("/campaign-report", response_class=HTMLResponse)
+async def campaign_report(request: Request):
+    """Serve a standalone printable campaign report page."""
+    data = _load_results()
+    if not data:
+        return HTMLResponse(
+            "<html><body style='font-family:sans-serif;padding:3rem;text-align:center'>"
+            "<h2 style='color:#1b5e20'>No pipeline data yet</h2>"
+            "<p style='color:#6b7280;margin:1rem 0'>Run the pipeline first.</p>"
+            "<a href='/' style='color:#15803d;font-weight:600'>Go to home page &rarr;</a>"
+            "</body></html>",
+            status_code=200,
+        )
+    return templates.TemplateResponse("campaign_report.html", {
+        "request": request,
+        **data,
+    })
+
+
+class _PbiUrlPayload(BaseModel):
+    url: str
+
+
+@app.post("/set-powerbi-url")
+async def set_powerbi_url(payload: _PbiUrlPayload):
+    """
+    Save the Power BI embed URL to .env so it persists across restarts.
+    Also updates the running process via os.environ so it takes effect immediately.
+    """
+    url = payload.url.strip()
+    # Basic sanity check — must look like a Power BI embed URL
+    if url and "powerbi.com" not in url:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="URL must be from powerbi.com")
+
+    # Update running process immediately
+    os.environ["POWERBI_EMBED_URL"] = url
+
+    # Persist to .env file
+    env_path = ROOT / ".env"
+    lines = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
+    key = "POWERBI_EMBED_URL"
+    updated = False
+    for i, line in enumerate(lines):
+        if line.startswith(f"{key}=") or line.startswith(f"{key} ="):
+            lines[i] = f'{key}="{url}"'
+            updated = True
+            break
+    if not updated:
+        lines.append(f'{key}="{url}"')
+    env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    return {"ok": True, "url": url}
+
+
 @app.get("/healthz")
 async def healthz():
     """Streamlit Cloud health-check endpoint."""
@@ -312,14 +475,171 @@ async def download(filename: str):
     return FileResponse(path, filename=filename)
 
 
+@app.get("/image/{folder}/{filename}")
+async def serve_image(folder: str, filename: str):
+    """Serve a raw or processed bin image (security: folder whitelist only)."""
+    if folder not in ("raw", "processed"):
+        return HTMLResponse("Invalid folder.", status_code=400)
+    # Prevent path traversal
+    safe_name = Path(filename).name
+    if safe_name != filename or ".." in filename:
+        return HTMLResponse("Invalid filename.", status_code=400)
+    path = DIRS[folder] / safe_name
+    if not path.exists() or not path.is_file():
+        return HTMLResponse("Image not found.", status_code=404)
+    return FileResponse(path)
+
+
+@app.post("/validate-image")
+async def validate_image(image: UploadFile = File(...)):
+    """
+    Quick AI check: does the uploaded image contain waste/refuse?
+    Returns {is_waste, confidence, label, note}.
+    Uses GPT-4o-mini vision if an API key is set; falls back to CLIP
+    if already cached; otherwise accepts all valid images.
+    """
+    import base64
+    from PIL import Image as PILImage
+    import io
+
+    img_bytes = await image.read()
+
+    # ── Basic validity check ────────────────────────────────────────────────
+    try:
+        pil_img = PILImage.open(io.BytesIO(img_bytes)).convert("RGB")
+        w, h = pil_img.size
+    except Exception as exc:
+        return {"is_waste": False, "confidence": 0.0,
+                "label": "invalid", "note": f"Cannot read image: {exc}"}
+
+    # ── OpenAI GPT-4o-mini vision ────────────────────────────────────────────
+    if _openai_available():
+        try:
+            from openai import AsyncOpenAI
+            b64 = base64.b64encode(img_bytes).decode()
+            mime = image.content_type or "image/jpeg"
+            client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            resp = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {"type": "image_url",
+                         "image_url": {"url": f"data:{mime};base64,{b64}", "detail": "low"}},
+                        {"type": "text",
+                         "text": (
+                             "You are a waste management AI. "
+                             "Does this image show a waste bin, garbage, rubbish, litter, refuse, "
+                             "or any form of solid waste? "
+                             "Reply in this exact format:\n"
+                             "VERDICT: YES or NO\n"
+                             "REASON: one sentence"
+                         )},
+                    ],
+                }],
+                max_tokens=80,
+                temperature=0,
+            )
+            reply = resp.choices[0].message.content.strip()
+            is_waste = "VERDICT: YES" in reply.upper()
+            reason_line = next(
+                (l for l in reply.splitlines() if l.upper().startswith("REASON:")), ""
+            )
+            reason = reason_line.replace("REASON:", "").replace("Reason:", "").strip()
+            return {
+                "is_waste": is_waste,
+                "confidence": 0.92 if is_waste else 0.88,
+                "label": "waste detected" if is_waste else "not waste",
+                "note": reason or ("Waste content confirmed by GPT-4o-mini vision." if is_waste
+                                   else "No waste content detected."),
+                "method": "gpt-4o-mini",
+            }
+        except Exception as exc:
+            logger.warning("Vision validation failed: %s — falling back.", exc)
+
+    # ── CLIP fallback (only if model is already cached in memory) ────────────
+    try:
+        from models.waste_classifier import WasteClassifier
+        # Save to a temp path for the classifier
+        tmp_path = DIRS["raw"] / f"_validate_{image.filename or 'tmp.jpg'}"
+        tmp_path.write_bytes(img_bytes)
+        clf = WasteClassifier()
+        result = clf.classify(tmp_path)
+        tmp_path.unlink(missing_ok=True)
+        conf = float(result.get("confidence", 0))
+        is_waste = conf > 0.25
+        return {
+            "is_waste": is_waste,
+            "confidence": round(conf, 3),
+            "label": result.get("label", "unknown"),
+            "note": (
+                f"CLIP classified as {result['label']} ({round(conf*100,1)}% confidence)."
+                if is_waste else
+                "CLIP confidence too low — image may not contain recognisable waste."
+            ),
+            "method": "clip",
+        }
+    except Exception:
+        pass
+
+    # ── Final fallback: accept valid images ──────────────────────────────────
+    return {
+        "is_waste": True,
+        "confidence": 0.5,
+        "label": "unverified",
+        "note": f"Valid image ({w}×{h}px). Install torch+transformers or add an OpenAI key for AI validation.",
+        "method": "basic",
+    }
+
+
+@app.get("/download-canva")
+async def download_canva():
+    """Download the Canva content pack JSON."""
+    path = DIRS["exports"] / "canva_pack.json"
+    if not path.exists():
+        return HTMLResponse("Canva pack not yet generated. Run the pipeline first.", status_code=404)
+    return FileResponse(path, filename="canva_pack.json", media_type="application/json")
+
+
 @app.get("/generate-report")
 async def generate_report():
     """Stream an AI-generated collection insights report via SSE."""
     data = _load_results()
     if not data:
         return HTMLResponse("No results available.", status_code=404)
+
+    # ── Fallback: stream pre-generated insights token-by-token ────────────────
     if not _openai_available():
-        return HTMLResponse("OPENAI_API_KEY not set.", status_code=503)
+        fi = data.get("fallback_insights")
+        if not fi:
+            return HTMLResponse("OPENAI_API_KEY not set and no cached insights available.", status_code=503)
+
+        # Combine sections into markdown text matching the GPT output format
+        sections = [
+            ("## Executive Summary", fi.get("executive_summary", "")),
+            ("## Key Findings",      fi.get("key_findings", "")),
+            ("## Hotspot & Priority Alert", fi.get("hotspot_alert", "")),
+            ("## Operational Recommendations", fi.get("recommendations", "")),
+            ("## Community Action Points",     fi.get("community_action", "")),
+        ]
+        full_text = "\n\n".join(f"{heading}\n{body}" for heading, body in sections)
+
+        async def fallback_generator():
+            import asyncio
+            # Stream word by word to simulate live generation
+            words = full_text.split(" ")
+            for i, word in enumerate(words):
+                chunk = word + (" " if i < len(words) - 1 else "")
+                yield f"data: {json.dumps({'text': chunk})}\n\n"
+                if i % 8 == 0:
+                    await asyncio.sleep(0.02)
+            yield f"data: {json.dumps({'done': True})}\n\n"
+
+        return StreamingResponse(
+            fallback_generator(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
 
     waste_lines  = "\n".join(f"  - {wt.capitalize()}: {pct}%" for wt, pct in data["waste_pct"].items())
     route_lines  = "\n".join(

@@ -328,6 +328,24 @@ def run_pipeline(
             "result": "creds.json not found — add service-account key to enable",
         })
 
+    # ── Fallback AI insights (always generated, no API key needed) ────────
+    try:
+        from collections import Counter as _Counter
+        from src.utils.insights_fallback import generate_fallback_insights
+        _type_counts  = dict(_Counter(b.get("waste_type", "unknown") for b in annotated))
+        _dominant     = max(_type_counts, key=_type_counts.get) if _type_counts else "plastic"
+        _total        = len(annotated)
+        _waste_pct    = {wt: round(cnt / max(_total, 1) * 100, 1) for wt, cnt in _type_counts.items()}
+        _fallback     = generate_fallback_insights(
+            bins=annotated, route_summary=route_summary, dominant_type=_dominant,
+            hotspot_zones=hot_zones, waste_pct=_waste_pct, total_km=total_km,
+        )
+        fi_path = DIRS["exports"] / "fallback_insights.json"
+        fi_path.write_text(json.dumps(_fallback, indent=2, ensure_ascii=False), encoding="utf-8")
+        logger.info("Fallback insights -> %s", fi_path)
+    except Exception as _exc:
+        logger.warning("Could not generate fallback insights: %s", _exc)
+
     # ── Manifest ──────────────────────────────────────────────────────────
     all_artefacts = {**export_paths, **report_paths}
     manifest_path = _write_manifest(all_artefacts, time.perf_counter() - t0, route_summary)

@@ -69,3 +69,74 @@ SHEETS_CREDS_FILE            = ROOT_DIR / "creds.json"   # service-account key f
 # At 1 000+ bins the route optimiser switches from nearest-neighbour O(n²)
 # to OR-Tools VRP solver (see route_optimizer.py §Scalability).
 OPTIMISER_MODE  = "nearest_neighbour"   # options: "nearest_neighbour" | "ortools"
+
+# ── Business Value Assumptions ────────────────────────────────────────────────
+BASELINE_DISTANCE_FACTOR   = 1.35   # unoptimised route ≈ optimised × 1.35
+FUEL_EFFICIENCY_KM_PER_L   = 8.0    # litres per km for Accra collection trucks
+FUEL_PRICE_GHS_PER_L       = 14.50  # Ghana Cedis per litre of diesel (2024 est.)
+AVG_SPEED_KMH              = 25.0   # average urban collection speed (km/h)
+RECYCLING_RATE_PCT         = 0.22   # fraction of waste that is recyclable
+AVG_BIN_WEIGHT_KG          = 12.0   # assumed average bin content weight (kg)
+RECYCLING_VALUE_GHS_PER_KG = 0.80   # market value per kg of recovered recyclables
+
+# ── Power BI ──────────────────────────────────────────────────────────────────
+POWERBI_EMBED_URL = ""   # override via env var POWERBI_EMBED_URL
+
+# ── Canva Integration ─────────────────────────────────────────────────────────
+CANVA_NEXT_COLLECTION_HOURS = 48   # hours until next scheduled collection
+
+# ── Model Evaluation — Failure Mode Cards ─────────────────────────────────────
+FAILURE_MODES = [
+    {
+        "mode": "Low-light capture",
+        "description": (
+            "Night-time or poorly-lit bins reduce CLIP accuracy by an estimated 15–20%. "
+            "Infrared-capable cameras are recommended for 24-hour deployments."
+        ),
+        "severity": "High",
+    },
+    {
+        "mode": "Mixed waste bins",
+        "description": (
+            "Bins containing multiple waste categories confuse zero-shot classification. "
+            "CLIP assigns the dominant visual type; minority categories are not detected."
+        ),
+        "severity": "Medium",
+    },
+    {
+        "mode": "Occlusion",
+        "description": (
+            "Closed lids or waste bags covering bin interiors prevent visual classification. "
+            "An estimated 5–8% of field bins may require physical inspection."
+        ),
+        "severity": "Medium",
+    },
+    {
+        "mode": "Local waste types",
+        "description": (
+            "CLIP was trained on generic English-language internet imagery. Ghana-specific "
+            "packaging (sachet water bags, kenkey wrappers) may be misclassified. "
+            "Domain fine-tuning is recommended before production rollout."
+        ),
+        "severity": "Low",
+    },
+]
+
+# ── Recommended RBAC Concept ──────────────────────────────────────────────────
+RBAC_ROLES = [
+    {
+        "role":        "Admin",
+        "permissions": "Full pipeline access · API key management · export all data · manage users",
+    },
+    {
+        "role":        "Analyst",
+        "permissions": "View all dashboards · download CSVs · regenerate AI reports · read-only config",
+    },
+    {
+        "role":        "Viewer",
+        "permissions": "View dashboard and zone map · download PDF reports only",
+    },
+]
+
+# ── Data Governance ───────────────────────────────────────────────────────────
+DATA_RETENTION_DAYS = 90   # raw images auto-purged after N days (data minimisation)

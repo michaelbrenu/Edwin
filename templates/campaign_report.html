@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IWMRO — Community Campaign Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: #1f2937;
+      background: #f9fafb;
+    }
+
+    /* ── Screen toolbar ── */
+    .toolbar {
+      background: #1b5e20;
+      color: #fff;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .toolbar-title { font-weight: 700; font-size: 14px; }
+    .toolbar-sub   { font-size: 11px; color: #a7f3d0; margin-top: 1px; }
+    .toolbar-btns  { display: flex; gap: 8px; }
+    .btn-print {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #15803d; color: #fff; border: 1px solid #166534;
+      padding: 7px 16px; border-radius: 7px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-print:hover { background: #166534; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; color: #a7f3d0; border: 1px solid #166534;
+      padding: 7px 14px; border-radius: 7px;
+      font-size: 12px; font-weight: 500; text-decoration: none;
+      transition: color .15s;
+    }
+    .btn-back:hover { color: #fff; }
+
+    /* ── Document ── */
+    .doc {
+      max-width: 860px;
+      margin: 28px auto;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+
+    /* Doc header */
+    .doc-header {
+      background: #f0fdf4;
+      border-bottom: 2px solid #16a34a;
+      padding: 20px 28px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .doc-emblem {
+      width: 42px; height: 42px; flex-shrink: 0;
+      background: #15803d; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    .doc-title { font-size: 18px; font-weight: 700; color: #1b5e20; line-height: 1.2; }
+    .doc-org   { font-size: 12px; color: #6b7280; margin-top: 3px; }
+    .doc-badge {
+      display: inline-block;
+      background: #fff; border: 1px solid #bbf7d0; color: #166534;
+      font-size: 10px; font-weight: 600; padding: 2px 8px;
+      border-radius: 4px; margin-top: 6px;
+    }
+    .doc-meta { text-align: right; font-size: 11px; color: #9ca3af; line-height: 1.7; white-space: nowrap; }
+
+    /* KPI strip */
+    .kpi-strip {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .kpi-item {
+      flex: 1;
+      padding: 14px 20px;
+      border-right: 1px solid #e5e7eb;
+    }
+    .kpi-item:last-child { border-right: none; }
+    .kpi-val { font-size: 22px; font-weight: 700; color: #1b5e20; line-height: 1; }
+    .kpi-lbl { font-size: 10px; color: #9ca3af; margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* Body */
+    .doc-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    .doc-left {
+      padding: 24px 28px;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .doc-right {
+      padding: 24px 28px;
+      background: #fafafa;
+    }
+
+    .section-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: #9ca3af; margin-bottom: 10px;
+    }
+
+    /* Waste pills */
+    .waste-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .waste-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--pbg); border: 1px solid var(--pborder);
+      padding: 5px 11px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; color: #374151;
+    }
+    .pill-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pdot); }
+    .pill-pct { color: #6b7280; font-weight: 400; }
+
+    /* Alert + info rows */
+    .alert-row {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: #fef3c7; border: 1px solid #fde68a;
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 12px; color: #92400e; margin-bottom: 10px;
+    }
+    .info-row {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 12px; color: #166534; margin-bottom: 10px;
+    }
+
+    /* Tips card */
+    .tips-card {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .tips-plastic  { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .tips-organic  { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .tips-metal    { background: #f9fafb; border: 1px solid #e5e7eb; }
+    .tips-electronic { background: #f5f3ff; border: 1px solid #ddd6fe; }
+    .tips-default  { background: #f9fafb; border: 1px solid #e5e7eb; }
+
+    .tips-eyebrow {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: #9ca3af;
+      padding: 12px 16px 0; margin-bottom: 4px;
+    }
+    .tips-headline {
+      font-size: 15px; font-weight: 700; color: #1f2937;
+      padding: 0 16px; line-height: 1.3; margin-bottom: 10px;
+    }
+    .tips-subhead {
+      font-size: 11px; font-weight: 600; color: #6b7280;
+      padding: 0 16px; margin-bottom: 10px;
+    }
+    .tip-row {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 12px; line-height: 1.6; color: #374151;
+      padding: 0 16px; margin-bottom: 8px;
+    }
+    .tip-arrow { font-weight: 700; color: #16a34a; flex-shrink: 0; margin-top: 1px; }
+    .tips-footer {
+      font-size: 10px; color: #9ca3af; font-style: italic;
+      padding: 10px 16px; border-top: 1px solid rgba(0,0,0,.06);
+      margin-top: 8px;
+    }
+
+    /* Footer */
+    .doc-footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 12px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 10.5px; color: #9ca3af;
+    }
+    .doc-footer strong { color: #6b7280; }
+
+    /* ── Print styles ── */
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none; }
+      .doc {
+        margin: 0; border: none; border-radius: 0;
+        box-shadow: none; max-width: 100%;
+      }
+      @page { margin: 1.5cm; }
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .doc-body { grid-template-columns: 1fr; }
+      .doc-left { border-right: none; border-bottom: 1px solid #e5e7eb; }
+      .kpi-strip { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Screen toolbar (hidden on print) ── -->
+<div class="toolbar">
+  <div>
+    <div class="toolbar-title">Community Campaign Report</div>
+    <div class="toolbar-sub">Accra Metropolitan Assembly — Waste Management Division</div>
+  </div>
+  <div class="toolbar-btns">
+    <a href="/analysis" class="btn-back">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Analysis
+    </a>
+    <button class="btn-print" onclick="window.print()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print / Save PDF
+    </button>
+  </div>
+</div>
+
+<!-- ── Document ── -->
+<div class="doc">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div style="display:flex;align-items:flex-start;gap:14px;">
+      <div class="doc-emblem">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div>
+        <div class="doc-title">Community Waste Campaign Report</div>
+        <div class="doc-org">Accra Metropolitan Assembly &mdash; Waste Management Division</div>
+        <span class="doc-badge">IWMRO Pipeline v1.0 &middot; Auto-generated</span>
+      </div>
+    </div>
+    <div class="doc-meta">
+      {{ run_timestamp[:10].replace('-', ' / ') if run_timestamp else '' }}<br>
+      Collection cycle report<br>
+      Confidential — AMA internal use
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi-item">
+      <div class="kpi-val">{{ total_bins }}</div>
+      <div class="kpi-lbl">Bins Monitored</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val" style="color:#dc2626;">{{ high_priority }}</div>
+      <div class="kpi-lbl">High Priority &nbsp;<span style="font-size:11px;font-weight:400;color:#9ca3af;">({{ high_pct }}%)</span></div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val">{{ trucks }}</div>
+      <div class="kpi-lbl">Trucks Dispatched</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val">{{ total_km }}<span style="font-size:14px;font-weight:500;color:#9ca3af;"> km</span></div>
+      <div class="kpi-lbl">Total Route Distance</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val" style="color:#15803d;">GH₵ {{ cost_saved_ghs }}</div>
+      <div class="kpi-lbl">Cost Saved (optimised)</div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="doc-body">
+
+    <!-- Left column -->
+    <div class="doc-left">
+
+      <div class="section-label">Waste Breakdown This Collection</div>
+      <div class="waste-pills">
+        {% for wtype, pct in waste_pct.items() %}
+        <div class="waste-pill"
+          style="--pdot:{% if wtype=='plastic' %}#1e88e5{% elif wtype=='organic' %}#43a047{% elif wtype=='electronic' %}#7c3aed{% else %}#9e9e9e{% endif %};
+                 --pbg:{% if wtype=='plastic' %}#eff6ff{% elif wtype=='organic' %}#f0fdf4{% elif wtype=='electronic' %}#f5f3ff{% else %}#f9fafb{% endif %};
+                 --pborder:{% if wtype=='plastic' %}#bfdbfe{% elif wtype=='organic' %}#bbf7d0{% elif wtype=='electronic' %}#ddd6fe{% else %}#e5e7eb{% endif %};">
+          <span class="pill-dot"></span>
+          <span>{{ wtype | capitalize }}</span>
+          <span class="pill-pct">{{ pct }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if hotspot_zones %}
+      <div class="alert-row">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span><strong>Hotspot zones requiring urgent collection:</strong><br>{{ hotspot_zones | join(', ') }}</span>
+      </div>
+      {% endif %}
+
+      <div class="info-row">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span><strong>Next scheduled collection:</strong> 48 hours from report generation</span>
+      </div>
+
+      <!-- Truck summary table -->
+      <div class="section-label" style="margin-top:16px;">Truck Route Summary</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:#f0fdf4;">
+            <th style="padding:6px 10px;text-align:left;font-weight:600;color:#1b5e20;border-bottom:1px solid #bbf7d0;">Truck</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:600;color:#1b5e20;border-bottom:1px solid #bbf7d0;">Bins</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:600;color:#1b5e20;border-bottom:1px solid #bbf7d0;">Distance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in route_summary %}
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:6px 10px;font-weight:600;color:#1b5e20;">{{ r.truck_id }}</td>
+            <td style="padding:6px 10px;">{{ r.num_bins }}</td>
+            <td style="padding:6px 10px;">{{ r.total_km }} km</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    </div>
+
+    <!-- Right column: tips -->
+    <div class="doc-right">
+
+      <div class="section-label">Community Guidance</div>
+      {% set TIPS = {
+        'plastic':    ['Rinse and flatten bottles before disposal.',
+                       'Avoid single-use sachets — use refillable water containers.',
+                       'Deposit plastic at the Kaneshie Recycling Point for 20 Gp credit.'],
+        'organic':    ['Use designated green bins for food scraps.',
+                       'Compost at home — contact AMA for a free starter kit.',
+                       'Do NOT dump food waste in drainage channels.'],
+        'metal':      ['Contact the Tema Scrap Collection Service (+233-XX-XXX-XXXX).',
+                       'Do not burn metal waste — toxic fumes are a serious health hazard.',
+                       'Arrange bulky metal items for scheduled kerb-side collection.'],
+        'electronic': ['Never dispose of e-waste in household bins or open dumps.',
+                       'Drop off phones, batteries and cables at the Tema E-Waste Facility.',
+                       'Businesses: contact AMA for a scheduled bulk e-waste collection.']
+      } %}
+      <div class="tips-card tips-{{ dominant_type }}">
+        <div class="tips-eyebrow">{{ dominant_type | capitalize }} Waste Focus</div>
+        <div class="tips-headline">
+          {{ waste_pct.get(dominant_type, 0) }}% of bins this collection
+          {% if dominant_type == 'plastic' %}contained plastic
+          {% elif dominant_type == 'organic' %}contained organic waste
+          {% elif dominant_type == 'metal' %}contained metal scrap
+          {% elif dominant_type == 'electronic' %}contained e-waste
+          {% else %}of mixed waste recorded{% endif %}
+        </div>
+        <div class="tips-subhead">Action required from residents &amp; businesses:</div>
+        {% for tip in TIPS.get(dominant_type, ['Sort waste into correct bins before disposal.']) %}
+        <div class="tip-row">
+          <span class="tip-arrow">&#10132;</span>
+          <span>{{ tip }}</span>
+        </div>
+        {% endfor %}
+        <div class="tips-footer">
+          For queries contact the Accra Metropolitan Assembly &mdash; Waste Division
+        </div>
+      </div>
+
+      <!-- All waste type summary -->
+      <div class="section-label" style="margin-top:20px;">All Waste Types This Cycle</div>
+      {% for wtype, pct in waste_pct.items() %}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:{% if wtype=='plastic' %}#1e88e5{% elif wtype=='organic' %}#43a047{% elif wtype=='electronic' %}#7c3aed{% else %}#9e9e9e{% endif %};"></div>
+        <div style="flex:1;font-size:12px;color:#374151;">{{ wtype | capitalize }}</div>
+        <div style="flex:2;background:#e5e7eb;border-radius:4px;height:6px;overflow:hidden;">
+          <div style="height:100%;width:{{ pct }}%;background:{% if wtype=='plastic' %}#1e88e5{% elif wtype=='organic' %}#43a047{% elif wtype=='electronic' %}#7c3aed{% else %}#9e9e9e{% endif %};border-radius:4px;"></div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:#374151;width:36px;text-align:right;">{{ pct }}%</div>
+      </div>
+      {% endfor %}
+
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="doc-footer">
+    <span>Generated by the <strong>IWMRO System</strong> &mdash; Accra Metropolitan Assembly</span>
+    <span>{{ run_timestamp[:19].replace('T', ' ') if run_timestamp else '' }}</span>
+    <span>For queries: AMA Waste Management Division</span>
+  </div>
+
+</div>
+
+</body>
+</html>

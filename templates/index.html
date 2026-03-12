@@ -180,13 +180,22 @@
         <input type="hidden" name="demo" value="0">
 
         <!-- Drop zone -->
-        <label class="drop-zone block mb-4" id="drop-zone" for="file-input">
+        <label class="drop-zone block mb-3" id="drop-zone" for="file-input">
           <input type="file" name="images" id="file-input" multiple accept="image/*"
-            class="hidden" onchange="updateFileLabel(this)">
+            class="hidden" onchange="updateFileLabel(this); showImagePreviews(this)">
           <svg class="mx-auto mb-3 text-gray-300" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
           <p class="text-sm text-gray-500 font-medium" id="file-label">Click to select images or drag &amp; drop</p>
           <p class="text-xs text-gray-400 mt-1">JPEG, PNG supported</p>
         </label>
+
+        <!-- Image preview + validation panel (hidden until files selected) -->
+        <div id="preview-panel" style="display:none;margin-bottom:1rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+            <span style="font-size:12px;font-weight:700;color:#374151;">Selected Images</span>
+            <span id="validation-summary" style="font-size:11px;color:#6b7280;"></span>
+          </div>
+          <div id="preview-grid" style="display:flex;flex-wrap:wrap;gap:0.5rem;"></div>
+        </div>
 
         {% if clip_available %}
         <label class="flex items-center gap-3 mb-5 cursor-pointer">
@@ -218,8 +227,24 @@
         </div>
         {% endif %}
 
-        <button type="submit"
-          class="w-full bg-green-700 hover:bg-green-800 active:bg-green-900 text-white font-semibold py-3 rounded-xl transition-colors text-sm tracking-wide">
+        <!-- Validation gate banner (shown when flagged images exist) -->
+        <div id="validation-gate" style="display:none;margin-bottom:0.75rem;padding:0.75rem 1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;">
+          <div style="font-weight:700;color:#dc2626;font-size:13px;margin-bottom:3px;">
+            ⚠ Non-waste images detected
+          </div>
+          <div style="font-size:12px;color:#991b1b;line-height:1.5;" id="gate-detail">
+            Remove the flagged images below or replace them with waste bin photos before proceeding.
+            Only images containing waste/refuse will be analysed.
+          </div>
+          <button type="button" onclick="proceedAnyway()" id="proceed-anyway-btn"
+            style="margin-top:8px;font-size:11.5px;color:#b91c1c;text-decoration:underline;background:none;border:none;cursor:pointer;padding:0;">
+            Proceed anyway with all images →
+          </button>
+        </div>
+
+        <button type="submit" id="upload-submit-btn"
+          class="w-full bg-green-700 hover:bg-green-800 active:bg-green-900 text-white font-semibold py-3 rounded-xl transition-colors text-sm tracking-wide"
+          disabled style="opacity:0.5;cursor:not-allowed;">
           Upload &amp; Run Pipeline
         </button>
       </form>
@@ -335,6 +360,22 @@
     <div class="ol-progress-track">
       <div id="ol-progress-fill" class="ol-progress-fill" style="width:0%"></div>
     </div>
+  </div>
+
+  <!-- Upload phase (shown before pipeline steps when files are being sent) -->
+  <div id="ol-upload-phase" style="display:none;padding:1rem 1.25rem;border-bottom:1px solid #f3f4f6;">
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.6rem;">
+      <div id="ol-upload-spinner" style="width:14px;height:14px;border:2px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>
+      <div id="ol-upload-check" style="display:none;width:14px;height:14px;background:#dcfce7;border-radius:50%;display:none;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <span id="ol-upload-label" style="font-size:13px;font-weight:600;color:#1f2937;">Uploading images…</span>
+      <span id="ol-upload-pct" style="font-size:12px;color:#6b7280;margin-left:auto;">0%</span>
+    </div>
+    <div style="height:5px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
+      <div id="ol-upload-bar" style="height:100%;width:0%;background:#16a34a;border-radius:3px;transition:width .15s linear;"></div>
+    </div>
+    <div id="ol-upload-sub" style="font-size:11px;color:#9ca3af;margin-top:4px;"></div>
   </div>
 
   <!-- Journey steps -->
@@ -487,6 +528,210 @@ function updateFileLabel(input) {
     : input.files.length + ' images selected';
 }
 
+/* ── Validation state ── */
+// Maps file index → {file, is_waste, removed}
+const _valState = new Map();
+let _validationDone = false;
+let _proceedAnyway  = false;
+
+function _refreshSubmitGate() {
+  const btn  = document.getElementById('upload-submit-btn');
+  const gate = document.getElementById('validation-gate');
+  if (!btn) return;
+
+  const active = [..._valState.values()].filter(s => !s.removed);
+  if (active.length === 0) {
+    // No files selected or all removed — disable
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor  = 'not-allowed';
+    gate.style.display = 'none';
+    return;
+  }
+
+  if (!_validationDone) {
+    // Still validating — disable
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor  = 'not-allowed';
+    gate.style.display = 'none';
+    btn.textContent = 'Validating images…';
+    return;
+  }
+
+  const flagged = active.filter(s => !s.is_waste);
+
+  if (flagged.length === 0 || _proceedAnyway) {
+    // All clear (or user overrode)
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor  = 'pointer';
+    btn.textContent   = 'Upload & Run Pipeline';
+    gate.style.display = 'none';
+  } else {
+    // Blocked by flagged images
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor  = 'not-allowed';
+    btn.textContent   = 'Upload & Run Pipeline';
+    const detail = document.getElementById('gate-detail');
+    detail.textContent = `${flagged.length} image${flagged.length>1?'s are':' is'} not recognised as waste. `
+      + 'Remove the flagged image(s) using the ✕ button, or click "Proceed anyway" to include all images.';
+    gate.style.display = 'block';
+  }
+}
+
+function proceedAnyway() {
+  _proceedAnyway = true;
+  _refreshSubmitGate();
+}
+
+function removePreviewImage(idx) {
+  const state = _valState.get(idx);
+  if (!state) return;
+  state.removed = true;
+
+  // Hide card
+  const card = document.getElementById('preview-card-' + idx);
+  if (card) card.style.display = 'none';
+
+  // Rebuild summary
+  _updateValidationSummary();
+  _refreshSubmitGate();
+}
+
+function _updateValidationSummary() {
+  const summary = document.getElementById('validation-summary');
+  const active  = [..._valState.values()].filter(s => !s.removed);
+  if (!active.length) { summary.textContent = ''; return; }
+  const done    = active.filter(s => s.is_waste !== undefined);
+  const passed  = active.filter(s => s.is_waste === true);
+  const failed  = active.filter(s => s.is_waste === false);
+  if (done.length < active.length) {
+    summary.style.color = '#6b7280';
+    summary.textContent = `Validating ${done.length} / ${active.length}…`;
+  } else if (failed.length === 0) {
+    summary.style.color = '#16a34a';
+    summary.textContent = `✓ All ${active.length} image${active.length>1?'s':''} verified as waste`;
+  } else {
+    summary.style.color = '#dc2626';
+    summary.textContent = `${passed.length} waste · ${failed.length} flagged — remove flagged to proceed`;
+  }
+}
+
+/* ── Image previews + AI waste validation ── */
+async function showImagePreviews(input) {
+  const panel = document.getElementById('preview-panel');
+  const grid  = document.getElementById('preview-grid');
+
+  // Reset state
+  _valState.clear();
+  _validationDone = false;
+  _proceedAnyway  = false;
+  grid.innerHTML  = '';
+
+  if (!input.files.length) {
+    panel.style.display = 'none';
+    _refreshSubmitGate();
+    return;
+  }
+
+  panel.style.display = 'block';
+  _refreshSubmitGate();  // disable submit while validating
+
+  const files = [...input.files];
+  files.forEach((file, idx) => {
+    _valState.set(idx, { file, is_waste: undefined, removed: false });
+
+    // Card
+    const card = document.createElement('div');
+    card.id = 'preview-card-' + idx;
+    card.style.cssText = 'position:relative;width:80px;border-radius:8px;overflow:visible;flex-shrink:0;';
+
+    // Image wrapper
+    const imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'width:80px;height:80px;border-radius:8px;overflow:hidden;border:2px solid #e5e7eb;';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+    imgWrap.appendChild(img);
+    card.appendChild(imgWrap);
+
+    // Remove button (top-right)
+    const rmBtn = document.createElement('button');
+    rmBtn.type = 'button';
+    rmBtn.title = 'Remove this image';
+    rmBtn.onclick = () => removePreviewImage(idx);
+    rmBtn.style.cssText = 'position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;border:none;cursor:pointer;font-size:11px;line-height:18px;text-align:center;font-weight:700;z-index:2;';
+    rmBtn.textContent = '✕';
+    card.appendChild(rmBtn);
+
+    // Validation badge (bottom strip)
+    const badge = document.createElement('div');
+    badge.id = 'val-badge-' + idx;
+    badge.style.cssText = 'margin-top:3px;padding:2px 4px;font-size:9px;font-weight:700;text-align:center;border-radius:4px;background:#f3f4f6;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    badge.innerHTML = '<span style="display:inline-block;animation:spin .7s linear infinite;">⟳</span> Checking…';
+    card.appendChild(badge);
+
+    // Filename
+    const fname = document.createElement('div');
+    fname.style.cssText = 'font-size:9px;color:#9ca3af;margin-top:2px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px;';
+    fname.textContent = file.name;
+    card.appendChild(fname);
+
+    grid.appendChild(card);
+  });
+
+  _updateValidationSummary();
+
+  // Validate each file in parallel
+  const promises = files.map(async (file, idx) => {
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res  = await fetch('/validate-image', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      const state = _valState.get(idx);
+      state.is_waste = data.is_waste;
+
+      const imgWrap = document.querySelector(`#preview-card-${idx} div`);
+      const badge   = document.getElementById('val-badge-' + idx);
+
+      if (data.is_waste) {
+        const method = data.method === 'gpt-4o-mini' ? '🤖 GPT' : data.method === 'clip' ? '🔍 CLIP' : '✓';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#166534';
+        badge.textContent = `${method} Waste ✓`;
+        badge.title = data.note || '';
+        if (imgWrap) imgWrap.style.borderColor = '#16a34a';
+      } else {
+        badge.style.background = '#fef2f2';
+        badge.style.color = '#dc2626';
+        badge.textContent = '⚠ Not waste — remove';
+        badge.title = data.note || 'Not recognised as waste';
+        if (imgWrap) imgWrap.style.borderColor = '#dc2626';
+        // Pulse the remove button red
+        const rmBtn = document.querySelector(`#preview-card-${idx} button`);
+        if (rmBtn) rmBtn.style.animation = 'pulse 1s ease-in-out 3';
+      }
+    } catch (_) {
+      const state = _valState.get(idx);
+      state.is_waste = true;   // network error → don't block
+      const badge = document.getElementById('val-badge-' + idx);
+      if (badge) { badge.style.background = '#f3f4f6'; badge.textContent = '? Unknown'; }
+    }
+
+    _updateValidationSummary();
+    _refreshSubmitGate();
+  });
+
+  await Promise.all(promises);
+  _validationDone = true;
+  _updateValidationSummary();
+  _refreshSubmitGate();
+}
+
 /* ── Drag-and-drop ── */
 const dz = document.getElementById('drop-zone');
 if (dz) {
@@ -496,8 +741,10 @@ if (dz) {
     dz.addEventListener(e, () => dz.classList.remove('dragover')));
   dz.addEventListener('drop', ev => {
     ev.preventDefault();
-    document.getElementById('file-input').files = ev.dataTransfer.files;
-    updateFileLabel(document.getElementById('file-input'));
+    const fi = document.getElementById('file-input');
+    fi.files = ev.dataTransfer.files;
+    updateFileLabel(fi);
+    showImagePreviews(fi);
   });
 }
 
@@ -638,36 +885,77 @@ function enqueue(ev) {
   flushQueue();
 }
 
-/* ── Stream pipeline events via fetch ReadableStream ── */
-async function streamPipeline(formData) {
+/* ── Stream pipeline events via XHR (supports upload.onprogress + SSE) ── */
+function streamPipeline(formData) {
   showOverlay();
-  try {
-    const res = await fetch('/run-stream', { method: 'POST', body: formData });
-    if (!res.ok || !res.body) {
-      window.location.href = '/results';
-      return;
-    }
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
-    let   buffer  = '';
 
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try { enqueue(JSON.parse(line.slice(6))); } catch (_) {}
-        }
+  // Check if there are files to upload
+  const hasFiles = (() => {
+    try { return formData.get('images') && formData.get('images').size > 0; } catch(_) { return false; }
+  })();
+
+  // Show upload phase only when there are actual files
+  const uploadPhase = document.getElementById('ol-upload-phase');
+  const uploadBar   = document.getElementById('ol-upload-bar');
+  const uploadPct   = document.getElementById('ol-upload-pct');
+  const uploadLabel = document.getElementById('ol-upload-label');
+  const uploadSub   = document.getElementById('ol-upload-sub');
+  const uploadSpinner = document.getElementById('ol-upload-spinner');
+  const uploadCheck   = document.getElementById('ol-upload-check');
+
+  if (hasFiles) {
+    uploadPhase.style.display = 'block';
+    uploadLabel.textContent = 'Uploading images…';
+    uploadBar.style.width = '0%';
+    uploadPct.textContent = '0%';
+  }
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/run-stream');
+
+  // ── Upload progress ──────────────────────────────────────────────────────
+  xhr.upload.onprogress = function(e) {
+    if (!e.lengthComputable || !hasFiles) return;
+    const pct = Math.round(e.loaded / e.total * 100);
+    uploadBar.style.width = pct + '%';
+    uploadPct.textContent = pct + '%';
+    uploadSub.textContent = formatBytes(e.loaded) + ' of ' + formatBytes(e.total);
+    if (pct === 100) {
+      uploadLabel.textContent = 'Upload complete — starting pipeline…';
+      uploadSpinner.style.display = 'none';
+      uploadCheck.style.display = 'flex';
+    }
+  };
+
+  // ── SSE response (partial reads) ─────────────────────────────────────────
+  let offset = 0;
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState < 3) return;
+    const chunk = xhr.responseText.slice(offset);
+    offset = xhr.responseText.length;
+    const lines = chunk.split('\n');
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try { enqueue(JSON.parse(line.slice(6))); } catch(_) {}
       }
     }
-    // Ensure any remaining queued events finish before we let pipeline_done redirect
-  } catch (err) {
-    console.error('Stream error:', err);
+  };
+
+  xhr.onerror = function() {
     window.location.href = '/results';
-  }
+  };
+
+  xhr.onload = function() {
+    if (xhr.status !== 200) window.location.href = '/results';
+  };
+
+  xhr.send(formData);
+}
+
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(0) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
 }
 
 /* ── Intercept demo form ── */
@@ -680,7 +968,26 @@ document.getElementById('form-demo').addEventListener('submit', function(e) {
 /* ── Intercept upload form ── */
 document.getElementById('form-upload').addEventListener('submit', function(e) {
   e.preventDefault();
-  const fd = new FormData(this);
+
+  // Build FormData with only non-removed files
+  const fd = new FormData();
+  fd.append('demo',     this.querySelector('[name=demo]').value || '0');
+  const clipEl = this.querySelector('[name=use_clip]');
+  if (clipEl) fd.append('use_clip', clipEl.checked ? '1' : '0');
+
+  if (_valState.size > 0) {
+    // Use curated file list (skip removed)
+    const approved = [..._valState.values()].filter(s => !s.removed).map(s => s.file);
+    if (approved.length === 0) return;   // nothing to upload
+    approved.forEach(f => fd.append('images', f, f.name));
+  } else {
+    // No previews (e.g. drag-drop before validation ran) — use raw file input
+    const fi = document.getElementById('file-input');
+    if (fi.files.length) {
+      [...fi.files].forEach(f => fd.append('images', f, f.name));
+    }
+  }
+
   streamPipeline(fd);
 });
 </script>
