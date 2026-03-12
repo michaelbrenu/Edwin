@@ -64,6 +64,9 @@ app.mount("/exports", StaticFiles(directory=DIRS["exports"]),  name="exports")
 
 templates = Jinja2Templates(directory=ROOT / "templates")
 
+# ── Pipeline cancellation flag ────────────────────────────────────────────────
+_pipeline_cancel: threading.Event = threading.Event()
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def _clip_available() -> bool:
@@ -333,6 +336,9 @@ async def run_stream(
 
     skip_classifier = (use_clip != "1") or not _clip_available()
 
+    # Reset cancel flag for fresh run
+    _pipeline_cancel.clear()
+
     # Thread-safe event queue: pipeline thread pushes, async generator pulls
     q: sync_queue.Queue = sync_queue.Queue()
 
@@ -347,7 +353,10 @@ async def run_stream(
                 use_mock=True,
                 skip_classifier=skip_classifier,
                 progress_cb=progress_cb,
+                cancel_event=_pipeline_cancel,
             )
+        except StopIteration:
+            pass  # clean cancel — pipeline_stopped event already emitted
         except Exception as exc:
             q.put(json.dumps({"type": "error", "msg": str(exc)}))
         finally:
@@ -459,6 +468,13 @@ async def set_powerbi_url(payload: _PbiUrlPayload):
     env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     return {"ok": True, "url": url}
+
+
+@app.post("/stop-pipeline")
+async def stop_pipeline():
+    """Signal the running pipeline to abort after its current step."""
+    _pipeline_cancel.set()
+    return {"ok": True}
 
 
 @app.get("/healthz")

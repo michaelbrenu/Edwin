@@ -17,7 +17,7 @@
     <div class="flex items-center gap-3">
       <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm" style="background:#ffffff15;border:1px solid #ffffff25;">W</div>
       <div>
-        <div class="font-bold text-base leading-tight tracking-wide">IWMRO</div>
+        <div class="font-bold text-base leading-tight tracking-wide">IWMRO <span style="display:inline-block;background:linear-gradient(135deg,#166534,#15803d);color:#bbf7d0;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.5px;vertical-align:middle;margin-left:4px;text-transform:uppercase;border:1px solid #16a34a60;">Group 10</span></div>
         <div class="text-xs leading-tight" style="color:#888;">Integrated Waste Management &amp; Recycling Optimizer</div>
       </div>
     </div>
@@ -109,68 +109,8 @@
 <div class="max-w-xl mx-auto px-6 py-12">
   <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
 
-    <!-- Tab header -->
-    <div class="flex border-b border-gray-100">
-      <button class="tab-btn active" id="tab-demo" onclick="switchTab('demo')">Run Demo</button>
-      <button class="tab-btn"        id="tab-upload" onclick="switchTab('upload')">Upload Images</button>
-    </div>
-
-    <!-- ── DEMO panel ── -->
-    <div id="panel-demo" class="p-8">
-      <p class="text-gray-600 text-sm mb-5 leading-relaxed">
-        Run the full pipeline on a synthetic dataset of <strong>50 waste bins</strong> across
-        9 Accra zones — Makola, East Legon, Osu, Kaneshie, Tema and more.
-        No images required.
-      </p>
-
-      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5 text-sm text-amber-800">
-        <div class="font-semibold mb-1">Mock dataset</div>
-        50 bins &nbsp;·&nbsp; 9 zones &nbsp;·&nbsp; Plastic / Organic / Metal &nbsp;·&nbsp; Haversine routing
-      </div>
-
-      {% if not clip_available %}
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5 text-sm text-blue-800">
-        <div class="font-semibold mb-1">CLIP classifier not installed</div>
-        Demo uses pre-assigned mock labels. To enable AI classification run:<br>
-        <code class="bg-blue-100 px-1.5 py-0.5 rounded text-xs mt-1 inline-block">pip install torch torchvision transformers</code>
-      </div>
-      {% endif %}
-
-      <!-- Session mode indicator -->
-      {% if openai_available %}
-      <div class="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 text-sm" style="background:#f0fdf4;border:1px solid #bbf7d0;">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:#dcfce7;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <div>
-          <div class="font-semibold text-green-800">AI Report Mode</div>
-          <div class="text-xs text-green-600 mt-0.5">GPT-4o mini will generate your Community Campaign Report on the results page.</div>
-        </div>
-      </div>
-      {% else %}
-      <div class="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 text-sm" style="background:#f9fafb;border:1px solid #e5e7eb;">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f3f4f6;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        </div>
-        <div>
-          <div class="font-semibold text-gray-600">Standard Mode</div>
-          <div class="text-xs text-gray-400 mt-0.5">Static analysis &amp; community tips. <a href="#api-config" onclick="toggleApiConfig();return false;" class="text-green-700 hover:underline">Add an API key</a> to enable AI reports.</div>
-        </div>
-      </div>
-      {% endif %}
-
-      <form method="post" action="/run" id="form-demo">
-        <input type="hidden" name="demo" value="1">
-        <input type="hidden" name="use_clip" value="0">
-        <button type="submit"
-          class="w-full bg-green-700 hover:bg-green-800 active:bg-green-900 text-white font-semibold py-3 rounded-xl transition-colors text-sm tracking-wide">
-          Run Full Pipeline
-        </button>
-      </form>
-    </div>
-
     <!-- ── UPLOAD panel ── -->
-    <div id="panel-upload" class="p-8 hidden">
+    <div id="panel-upload" class="p-8">
       <p class="text-gray-600 text-sm mb-5 leading-relaxed">
         Upload JPEG or PNG images captured from field bins. The system will anonymise,
         classify, and generate optimised collection routes for your data.
@@ -483,6 +423,16 @@
 
   </div>
 
+  <!-- Stop button -->
+  <div id="ol-stop-wrap" style="padding:0.75rem 1.25rem;border-top:1px solid #f3f4f6;">
+    <button id="ol-stop-btn" onclick="stopPipeline()"
+      style="display:flex;align-items:center;gap:0.5rem;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;padding:0.45rem 1rem;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;"
+      onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="#dc2626"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+      Stop Pipeline
+    </button>
+  </div>
+
   <!-- Done banner -->
   <div class="ol-done-banner" id="ol-done-banner">
     <div class="ol-done-icon">
@@ -511,14 +461,6 @@ function toggleApiConfig() {
 // Auto-open on redirect after save
 document.addEventListener('DOMContentLoaded', () => toggleApiConfig());
 {% endif %}
-
-/* ── Tab switching ── */
-function switchTab(name) {
-  ['demo','upload'].forEach(t => {
-    document.getElementById('tab-' + t).classList.toggle('active', t === name);
-    document.getElementById('panel-' + t).classList.toggle('hidden', t !== name);
-  });
-}
 
 /* ── File label update ── */
 function updateFileLabel(input) {
@@ -754,6 +696,14 @@ function showOverlay() {
   document.getElementById('ol-card').style.display     = 'block';
 }
 
+/* ── Stop pipeline ── */
+function stopPipeline() {
+  const btn = document.getElementById('ol-stop-btn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.textContent = 'Stopping…'; }
+  if (_xhr) _xhr.abort();
+  fetch('/stop-pipeline', { method: 'POST' }).catch(() => {});
+}
+
 /* ── Step icon SVGs ── */
 const STEP_ICONS = {
   1: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
@@ -859,7 +809,18 @@ function applyEvent(ev) {
       document.getElementById('ol-check').style.display   = 'flex';
       document.getElementById('ol-time').textContent      = ev.elapsed;
       document.getElementById('ol-done-banner').classList.add('show');
+      document.getElementById('ol-stop-wrap').style.display = 'none';
       setTimeout(() => { window.location.href = '/results'; }, 2200);
+      break;
+    case 'pipeline_stopped':
+      setSubtitle('Pipeline stopped after step ' + ev.at_step);
+      document.getElementById('ol-spinner').style.display = 'none';
+      document.getElementById('ol-stop-wrap').innerHTML =
+        '<div style="display:flex;align-items:center;gap:0.75rem;">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+        '<span style="color:#dc2626;font-size:13px;font-weight:600;">Stopped at step ' + ev.at_step + '</span>' +
+        '<a href="/" style="margin-left:auto;color:#16a34a;font-size:12px;font-weight:600;text-decoration:underline;">Run again</a>' +
+        '</div>';
       break;
   }
 }
@@ -867,6 +828,7 @@ function applyEvent(ev) {
 /* ── Queued processor — enforces minimum dwell per step ── */
 let _queue = [];
 let _running = false;
+let _xhr = null;  // active XHR so it can be aborted by stopPipeline()
 
 async function flushQueue() {
   if (_running) return;
@@ -910,7 +872,8 @@ function streamPipeline(formData) {
     uploadPct.textContent = '0%';
   }
 
-  const xhr = new XMLHttpRequest();
+  _xhr = new XMLHttpRequest();
+  const xhr = _xhr;
   xhr.open('POST', '/run-stream');
 
   // ── Upload progress ──────────────────────────────────────────────────────
@@ -957,13 +920,6 @@ function formatBytes(b) {
   if (b < 1048576) return (b/1024).toFixed(0) + ' KB';
   return (b/1048576).toFixed(1) + ' MB';
 }
-
-/* ── Intercept demo form ── */
-document.getElementById('form-demo').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const fd = new FormData(this);
-  streamPipeline(fd);
-});
 
 /* ── Intercept upload form ── */
 document.getElementById('form-upload').addEventListener('submit', function(e) {

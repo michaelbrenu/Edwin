@@ -190,6 +190,7 @@ def run_pipeline(
     use_mock: bool = True,
     skip_classifier: bool = False,
     progress_cb=None,
+    cancel_event=None,
 ) -> dict:
     """
     Execute the full IWMRO pipeline.
@@ -212,6 +213,11 @@ def run_pipeline(
                 progress_cb(event)
             except Exception:
                 pass
+
+    def check_cancel(at_step: int):
+        if cancel_event and cancel_event.is_set():
+            emit({"type": "pipeline_stopped", "at_step": at_step})
+            raise StopIteration(f"Pipeline cancelled after step {at_step}")
 
     t0 = time.perf_counter()
     logger.info("=" * 60)
@@ -238,6 +244,7 @@ def run_pipeline(
         "type": "step_done", "step": 1,
         "result": f"{len(processed_paths)} images scanned · PII regions anonymised",
     })
+    check_cancel(1)
 
     # ── Step 2: Classify ──────────────────────────────────────────────────
     if not skip_classifier:
@@ -268,6 +275,7 @@ def run_pipeline(
             "type": "step_skip", "step": 2, "name": "Waste Classifier",
             "result": "Using pre-assigned labels — install torch + transformers to enable CLIP",
         })
+    check_cancel(2)
 
     # ── Step 3: Optimise ──────────────────────────────────────────────────
     emit({
@@ -286,6 +294,7 @@ def run_pipeline(
         "result": "  ·  ".join(result_parts),
         "hotspots": hot_zones,
     })
+    check_cancel(3)
 
     # ── Step 4: Export for Power BI ───────────────────────────────────────
     emit({
@@ -297,6 +306,7 @@ def run_pipeline(
         "type": "step_done", "step": 4,
         "result": f"powerbi_bins.csv ({len(annotated)} rows)  ·  powerbi_hotspots.csv",
     })
+    check_cancel(4)
 
     # ── Step 5: Generate reports ──────────────────────────────────────────
     emit({
