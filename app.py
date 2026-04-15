@@ -252,12 +252,15 @@ def _compute_model_performance(bins: list) -> dict:
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     has_results = (DIRS["exports"] / "powerbi_bins.json").exists()
-    return templates.TemplateResponse("index.html", {
-        "request":        request,
-        "clip_available": _clip_available(),
-        "has_results":    has_results,
-        "openai_available": _openai_available(),
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "clip_available": _clip_available(),
+            "has_results":    has_results,
+            "openai_available": _openai_available(),
+        },
+    )
 
 
 @app.post("/set-api-key")
@@ -390,11 +393,14 @@ async def results(request: Request):
     data = _load_results()
     if not data:
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse("results.html", {
-        "request": request,
-        "openai_available": _openai_available(),
-        **data,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="results.html",
+        context={
+            "openai_available": _openai_available(),
+            **data,
+        },
+    )
 
 
 @app.get("/analysis", response_class=HTMLResponse)
@@ -409,10 +415,13 @@ async def analysis(request: Request):
             "</body></html>",
             status_code=200,
         )
-    return templates.TemplateResponse("analysis.html", {
-        "request": request,
-        **data,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="analysis.html",
+        context={
+            **data,
+        },
+    )
 
 
 @app.get("/campaign-report", response_class=HTMLResponse)
@@ -428,10 +437,13 @@ async def campaign_report(request: Request):
             "</body></html>",
             status_code=200,
         )
-    return templates.TemplateResponse("campaign_report.html", {
-        "request": request,
-        **data,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="campaign_report.html",
+        context={
+            **data,
+        },
+    )
 
 
 class _PbiUrlPayload(BaseModel):
